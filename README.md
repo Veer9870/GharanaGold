@@ -1,6 +1,8 @@
+
 # Enterprise ERP System
 
 A complete, production-ready ERP system built with Flask, MySQL/SQLite, and Bootstrap 5 for FMCG/Food Manufacturing companies.
+
 
 ## Features
 
@@ -290,3 +292,4 @@ For issues or questions, please check the code comments or create an issue in th
 ---
 
 **Built with ❤️ for FMCG/Food Manufacturing Industry**
+
