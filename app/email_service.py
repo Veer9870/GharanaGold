@@ -259,7 +259,7 @@ class EmailService:
             </table>
         </div>
         
-        <p><strong>Access your ERP Dashboard:</strong> <a href="http://127.0.0.1:5000">Login to ERP</a></p>
+        <p><strong>Access your ERP Dashboard:</strong> <a href="https://gharanagold.onrender.com/">Login to Inventory</a></p>
         <p style="color: #666; font-size: 12px;">This is an automated daily report from your ERP System.</p>
         """
         
