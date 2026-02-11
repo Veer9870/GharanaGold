@@ -1,100 +1,211 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">{{ 'Edit Product' if product else 'Add New Product' }}</h1>
-    <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
-
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="POST">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Product Code</label>
-                    <input type="text" class="form-control" name="code" value="{{ product.code if product else '' }}"
-                        required>
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label">Product Name</label>
-                    <input type="text" class="form-control" name="name" value="{{ product.name if product else '' }}"
-                        required>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" name="category">
-                        <option value="Snacks" {% if product and product.category=='Snacks' %}selected{% endif %}>Snacks
-                        </option>
-                        <option value="Beverages" {% if product and product.category=='Beverages' %}selected{% endif %}>
-                            Beverages</option>
-                        <option value="Sweets" {% if product and product.category=='Sweets' %}selected{% endif %}>Sweets
-                        </option>
-                        <option value="Dairy" {% if product and product.category=='Dairy' %}selected{% endif %}>Dairy
-                        </option>
-                        <option value="Raw Material" {% if product and product.category=='Raw Material' %}selected{%
-                            endif %}>Raw Material</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Brand</label>
-                    <input type="text" class="form-control" name="brand" value="{{ product.brand if product else '' }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Unit</label>
-                    <select class="form-select" name="unit">
-                        <option value="Pkt" {% if product and product.unit=='Pkt' %}selected{% endif %}>Packet (Pkt)
-                        </option>
-                        <option value="Box" {% if product and product.unit=='Box' %}selected{% endif %}>Box</option>
-                        <option value="Kg" {% if product and product.unit=='Kg' %}selected{% endif %}>Kg</option>
-                        <option value="Ltr" {% if product and product.unit=='Ltr' %}selected{% endif %}>Ltr</option>
-                        <option value="Pc" {% if product and product.unit=='Pc' %}selected{% endif %}>Piece</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Cost Price</label>
-                    <input type="number" step="0.01" class="form-control" name="cost_price"
-                        value="{{ product.cost_price if product else '' }}" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Selling Price</label>
-                    <input type="number" step="0.01" class="form-control" name="selling_price"
-                        value="{{ product.selling_price if product else '' }}" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">GST %</label>
-                    <input type="number" step="0.01" class="form-control" name="gst_percent"
-                        value="{{ product.gst_percent if product else '18' }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Current Stock</label>
-                    <input type="number" class="form-control" name="stock_quantity"
-                        value="{{ product.stock_quantity if product else '0' }}" {% if product and not
-                        current_user.has_role('super_admin') %}readonly{% endif %}>
-                    <small class="text-muted">Initial stock only.</small>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Min Stock Alert Level</label>
-                    <input type="number" class="form-control" name="min_stock_alert"
-                        value="{{ product.min_stock_alert if product else '10' }}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Warehouse Location</label>
-                    <input type="text" class="form-control" name="warehouse_location"
-                        value="{{ product.warehouse_location if product else '' }}">
-                </div>
-
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i> Save Product
-                    </button>
-                </div>
-            </div>
-        </form>
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">{{ 'Update Product' if product else 'Register New Product' }}</h2>
+        <p class="text-muted mb-0">Define specifications for Gharana Gold catalog items</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+        </a>
     </div>
 </div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-primary">Product Information</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row g-4">
+                        <!-- Identity Section -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">Product SKU Code</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i
+                                        class="fas fa-barcode text-muted"></i></span>
+                                <input type="text" class="form-control bg-light border-start-0 ps-0" name="code"
+                                    value="{{ product.code if product else '' }}" placeholder="GG-SP-001" required>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-600">Product Name</label>
+                            <input type="text" class="form-control" name="name"
+                                value="{{ product.name if product else '' }}"
+                                placeholder="Ex: Premium Turmeric Powder 500g" required>
+                        </div>
+
+                        <!-- Categorization -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-600">Primary Category</label>
+                            <select class="form-select" name="category">
+                                <option value="Powdered Spices" {% if product and product.category=='Powdered Spices'
+                                    %}selected{% endif %}>Powdered Spices</option>
+                                <option value="Whole Spices" {% if product and product.category=='Whole Spices'
+                                    %}selected{% endif %}>Whole Spices</option>
+                                <option value="Masala Blends" {% if product and product.category=='Masala Blends'
+                                    %}selected{% endif %}>Masala Blends</option>
+                                <option value="Oils & Ghee" {% if product and product.category=='Oils & Ghee'
+                                    %}selected{% endif %}>Oils & Ghee</option>
+                                <option value="Dry Fruits" {% if product and product.category=='Dry Fruits' %}selected{%
+                                    endif %}>Dry Fruits</option>
+                                <option value="Raw Material" {% if product and product.category=='Raw Material'
+                                    %}selected{% endif %}>Raw Material</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-600">Preferred Vendor</label>
+                            <select class="form-select" name="vendor_id">
+                                <option value="">General / Multiple</option>
+                                {% for vendor in vendors %}
+                                <option value="{{ vendor.id }}" {% if product and product.vendor_id==vendor.id
+                                    %}selected{% endif %}>
+                                    {{ vendor.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-600">Brand Name</label>
+                            <input type="text" class="form-control" name="brand"
+                                value="{{ product.brand if product else 'Gharana Gold' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-600">Base Unit</label>
+                            <select class="form-select" name="unit">
+                                <option value="Kg" {% if product and product.unit=='Kg' %}selected{% endif %}>Kilogram
+                                    (Kg)</option>
+                                <option value="Pkt" {% if product and product.unit=='Pkt' %}selected{% endif %}>Packet
+                                    (Pkt)</option>
+                                <option value="Box" {% if product and product.unit=='Box' %}selected{% endif %}>Box
+                                </option>
+                                <option value="Gram" {% if product and product.unit=='Gram' %}selected{% endif %}>Gram
+                                    (g)</option>
+                                <option value="Pc" {% if product and product.unit=='Pc' %}selected{% endif %}>Piece
+                                </option>
+                                <option value="Ltr" {% if product and product.unit=='Ltr' %}selected{% endif %}>Liter
+                                    (Ltr)</option>
+                            </select>
+                        </div>
+
+                        <!-- Pricing Section -->
+                        <div class="col-12 mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-indian-rupee-sign me-2"></i>Pricing &
+                                Taxation</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">Unit Cost Price (Base)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" step="0.01" class="form-control" name="cost_price"
+                                    value="{{ product.cost_price if product else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">Market Selling Price</label>
+                            <div class="input-group border-success border rounded">
+                                <span class="input-group-text bg-success text-white border-0">₹</span>
+                                <input type="number" step="0.01" class="form-control border-0" name="selling_price"
+                                    value="{{ product.selling_price if product else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">GST Percentage (%)</label>
+                            <input type="number" step="0.01" class="form-control" name="gst_percent"
+                                value="{{ product.gst_percent if product else '18' }}">
+                        </div>
+
+                        <!-- Stock Controls -->
+                        <div class="col-12 mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-warehouse me-2"></i>Inventory Control
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">{% if product %}Current Stock{% else %}Initial Stock{%
+                                endif %} Quantity</label>
+                            <input type="number"
+                                class="form-control {% if product and not current_user.has_role('super_admin') %}bg-light{% endif %}"
+                                name="stock_quantity" value="{{ product.stock_quantity if product else '0' }}" {% if
+                                product and not current_user.has_role('super_admin') %}readonly{% endif %}>
+                            {% if product %}
+                            <div class="form-text text-muted">Use <a
+                                    href="{{ url_for('inventory.adjust_stock', id=product.id) }}">Stock Adjustment</a>
+                                to modify</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">Low Stock Alert Level</label>
+                            <input type="number" class="form-control" name="min_stock_alert"
+                                value="{{ product.min_stock_alert if product else '10' }}">
+                            <div class="form-text">Triggers dashboard & email alerts</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-600">Warehouse Location</label>
+                            <input type="text" class="form-control" name="warehouse_location"
+                                value="{{ product.warehouse_location if product else '' }}" placeholder="Ex: Row A-14">
+                        </div>
+
+                        <!-- Batch & Expiry Section -->
+                        <div class="col-12 mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-tags me-2"></i>Batch & Expiry Tracking
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Batch Number</label>
+                            <input type="text" class="form-control" name="batch_number"
+                                value="{{ product.batch_number if product else '' }}" placeholder="Ex: BATCH-2026-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Expiry Date</label>
+                            <input type="date" class="form-control" name="expiry_date"
+                                value="{{ product.expiry_date.strftime('%Y-%m-%d') if product and product.expiry_date else '' }}">
+                            <div class="form-text">Leave empty if not applicable</div>
+                        </div>
+
+                        <div class="col-12 mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-image me-2"></i>Product Visuals</h6>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">Product Image (Optional)</label>
+                            <input type="file" class="form-control" name="image" accept="image/*">
+                            {% if product and product.image_file and product.image_file != 'default.jpg' %}
+                            <div class="mt-2">
+                                <img src="{{ url_for('static', filename='images/products/' + product.image_file) }}"
+                                    alt="Current Image" class="img-thumbnail" style="max-height: 100px;">
+                                <div class="small text-muted">Current stored image</div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 mt-5">
+                            <button type="submit" class="btn btn-primary px-5 py-2 shadow-sm">
+                                <i class="fas fa-save me-2"></i>{{ 'Confirm Changes' if product else 'Register Product'
+                                }}
+                            </button>
+                            <a href="{{ url_for('inventory.index') }}" class="btn btn-link text-muted px-4">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-600 {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #5a5c69;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.1);
+    }
+</style>
 {% endblock %}

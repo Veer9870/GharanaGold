@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-lg my-5">
+            <div class="card-body p-0">
+                <div class="p-5">
+                    <div class="text-center">
+                        <h1 class="h4 text-gray-900 mb-4 fw-bold">Update Access Control</h1>
+                        <p class="text-muted small mb-4">Modifying credentials for {{ user.username }}</p>
+                    </div>
+                    <form class="user" method="POST">
+                        <div class="form-group mb-3">
+                            <label class="small text-muted mb-1">Role Assignment</label>
+                            <select class="form-select rounded-pill px-3" name="role" required>
+                                <option value="store_user" {% if user.role=='store_user' %}selected{% endif %}>Store
+                                    User (POS Only)</option>
+                                <option value="manager" {% if user.role=='manager' %}selected{% endif %}>Manager
+                                    (Inventory + Reports)</option>
+                                <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin (Full Access)
+                                </option>
+                                <option value="super_admin" {% if user.role=='super_admin' %}selected{% endif %}>Super
+                                    Admin (System Owner)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="small text-muted mb-1">Account Status</label>
+                            <div class="form-check form-switch ps-5">
+                                <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked"
+                                    name="is_active" {% if user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="flexSwitchCheckChecked">Active Account</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="small text-muted mb-1">Reset Password (Leave blank to keep current)</label>
+                            <input type="password" class="form-control form-control-user rounded-pill px-3"
+                                name="password" placeholder="New Password">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-user w-100 rounded-pill shadow-sm">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </form>
+                    <hr>
+                    <div class="text-center">
+                        <a class="small text-decoration-none" href="{{ url_for('auth.users') }}">
+                            <i class="fas fa-arrow-left me-1"></i> Return to Matrix
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

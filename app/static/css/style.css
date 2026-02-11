@@ -1,33 +1,317 @@
-/* Custom styles for ERP System */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #4e73df;
+    --secondary-color: #858796;
+    --success-color: #1cc88a;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-color: #f8f9fc;
+    --dark-color: #5a5c69;
+    --sidebar-bg: #ffffff;
+    --content-bg: #f7f8fc;
+    --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    --border-radius: 0.75rem;
+    --sidebar-width: 260px;
 }
 
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--content-bg);
+    color: #4b4b4b;
+    overflow-x: hidden;
+}
+
+/* Sidebar Styling */
 .sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
-    z-index: 100;
-    padding: 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-}
-
-.sidebar-sticky {
-    position: relative;
-    top: 0;
-    height: calc(100vh - 48px);
-    padding-top: .5rem;
-    overflow-x: hidden;
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    border-right: 1px solid #e3e6f0;
+    z-index: 1000;
+    transition: all 0.3s;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.content {
-    margin-left: 240px;
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #858796;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    margin: 0.2rem 1rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.sidebar .nav-link:hover {
+    background: #f8f9fc;
+    color: var(--primary-color);
+}
+
+.sidebar .nav-link.active {
+    background: rgba(78, 115, 223, 0.1);
+    color: var(--primary-color);
+}
+
+/* Sidebar Scrollbar Styling */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #e3e6f0;
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #d1d3e2;
+}
+
+.sidebar-brand {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid #e3e6f0;
+    margin-bottom: 1rem;
+}
+
+/* Content Area */
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    padding: 2rem;
 }
 
 @media (max-width: 768px) {
-    .content {
+    .sidebar {
+        margin-left: calc(-1 * var(--sidebar-width));
+    }
+
+    .main-wrapper {
         margin-left: 0;
     }
+
+    .sidebar.active {
+        margin-left: 0;
+    }
+}
+
+/* Cards & Components */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    background: #fff;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid #f1f1f1;
+    padding: 1.25rem;
+    font-weight: 600;
+}
+
+/* Metric Cards */
+.metric-card {
+    padding: 1.5rem;
+}
+
+.metric-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.metric-label {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #858796;
+    letter-spacing: 0.05rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title h2 {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+/* AI Global Aesthetics */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(78, 115, 223, 0.2);
+    --neural-primary: #4e73df;
+    --neural-success: #1cc88a;
+}
+
+.ai-status-bar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+}
+
+.ai-pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--neural-primary);
+    box-shadow: 0 0 0 rgba(78, 115, 223, 0.4);
+    animation: pulse-core 2s infinite;
+}
+
+@keyframes pulse-core {
+    0% {
+        box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(78, 115, 223, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(78, 115, 223, 0);
+    }
+}
+
+.dash-card-glow {
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.dash-card-glow:hover {
+    box-shadow: 0 0.5rem 2rem rgba(78, 115, 223, 0.15) !important;
+    transform: translateY(-5px);
+}
+
+.hover-up:hover {
+    transform: translateY(-8px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-soft-primary {
+    background-color: rgba(78, 115, 223, 0.08);
+}
+
+.bg-soft-success {
+    background-color: rgba(28, 200, 138, 0.08);
+}
+
+.bg-soft-warning {
+    background-color: rgba(246, 194, 62, 0.08);
+}
+
+.bg-soft-danger {
+    background-color: rgba(231, 74, 59, 0.08);
+}
+
+.bg-soft-info {
+    background-color: rgba(54, 185, 204, 0.08);
+}
+
+.bg-soft-secondary {
+    background-color: rgba(133, 135, 150, 0.08);
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.fs-small {
+    font-size: 0.7rem;
+}
+
+.tracking-wider {
+    letter-spacing: 0.1em;
+}
+
+.live-dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background: var(--neural-success);
+    display: inline-block;
+    animation: blink-dot 1.5s infinite;
+}
+
+@keyframes blink-dot {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Custom Gradients for reference */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
 }

@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Inventory Analytics</h2>
+        <p class="text-muted mb-0">Advanced insights and stock performance metrics</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+        </a>
+    </div>
+</div>
+
+<!-- Value Summary -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-gradient-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-white-50 small text-uppercase mb-1">Total Inventory Value</div>
+                        <div class="fw-bold display-6">₹{{ "{:,.0f}".format(total_value) }}</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                        <i class="fas fa-warehouse fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-gradient-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-white-50 small text-uppercase mb-1">Potential Revenue</div>
+                        <div class="fw-bold display-6">₹{{ "{:,.0f}".format(potential_revenue) }}</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                        <i class="fas fa-chart-line fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-gradient-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-white-50 small text-uppercase mb-1">Stock In (30 Days)</div>
+                        <div class="fw-bold display-6">+{{ stock_in }}</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                        <i class="fas fa-arrow-down fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-gradient-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-white-50 small text-uppercase mb-1">Stock Out (30 Days)</div>
+                        <div class="fw-bold display-6">-{{ stock_out }}</div>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                        <i class="fas fa-arrow-up fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Stock Movement Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-chart-area text-primary me-2"></i>Stock Movement Trend (Last
+                    30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; position: relative;">
+                    <canvas id="movementChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-chart-pie text-success me-2"></i>Category Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px; position: relative;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Top Moving Products -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-fire text-danger me-2"></i>Top Moving Products</h5>
+                <span class="badge bg-primary">Last 30 Days</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Product</th>
+                                <th class="text-end pe-4">Movement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in top_products %}
+                            <tr>
+                                <td class="ps-4">
+                                    {% if loop.index == 1 %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-trophy"></i></span>
+                                    {% elif loop.index == 2 %}
+                                    <span class="badge bg-secondary"><i class="fas fa-medal"></i></span>
+                                    {% elif loop.index == 3 %}
+                                    <span class="badge bg-danger"><i class="fas fa-award"></i></span>
+                                    {% else %}
+                                    {{ loop.index }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('inventory.view_product', id=item[0].id) }}"
+                                        class="text-decoration-none text-dark fw-bold">
+                                        {{ item[0].name }}
+                                    </a>
+                                    <div class="text-muted small">{{ item[0].category }}</div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <span class="fw-bold text-primary fs-5">{{ item[1] }}</span>
+                                    <div class="text-muted small">units</div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No movement data</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle text-warning me-2"></i>Low Stock Alert
+                </h5>
+                <a href="{{ url_for('inventory.alerts') }}" class="btn btn-sm btn-outline-warning">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th>Stock</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in low_stock_products %}
+                            <tr>
+                                <td class="ps-4">
+                                    <strong>{{ product.name }}</strong>
+                                    <div class="text-muted small"><code>{{ product.code }}</code></div>
+                                </td>
+                                <td>
+                                    <span class="text-warning fw-bold">{{ product.stock_quantity }}</span>
+                                    <span class="text-muted">/ {{ product.min_stock_alert }}</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ url_for('inventory.adjust_stock', id=product.id) }}"
+                                        class="btn btn-sm btn-success">
+                                        Restock
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-success">
+                                    <i class="fas fa-check-circle me-2"></i>All stock levels healthy!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Out of Stock -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-times-circle text-danger me-2"></i>Out of Stock ({{
+                    out_of_stock_products|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if out_of_stock_products %}
+                <div class="row g-2">
+                    {% for product in out_of_stock_products[:8] %}
+                    <div class="col-6">
+                        <div class="border rounded p-2 bg-light">
+                            <div class="fw-bold small text-truncate">{{ product.name }}</div>
+                            <code class="text-muted small">{{ product.code }}</code>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if out_of_stock_products|length > 8 %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('inventory.alerts') }}" class="btn btn-sm btn-outline-danger">
+                        View all {{ out_of_stock_products|length }} out of stock items
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-4 text-success">
+                    <i class="fas fa-box-open fa-2x mb-2"></i>
+                    <p class="mb-0">No products out of stock!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Expiring Products -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-clock text-info me-2"></i>Expiring Soon ({{
+                    expiring_products|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Product</th>
+                                <th>Expiry</th>
+                                <th class="text-end pe-4">Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in expiring_products[:5] %}
+                            <tr>
+                                <td class="ps-4">{{ product.name }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ product.expiry_date }}</span></td>
+                                <td class="text-end pe-4">{{ product.stock_quantity }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-success">
+                                    <i class="fas fa-check-circle me-2"></i>No products expiring soon!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    }
+
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Data constants from Jinja
+    const chartLabels = JSON.parse('{{ chart_labels | tojson | safe }}');
+    const chartIn = JSON.parse('{{ chart_in | tojson | safe }}');
+    const chartOut = JSON.parse('{{ chart_out | tojson | safe }}');
+    const categoryLabels = JSON.parse('{{ category_data | map(attribute="category") | list | tojson | safe }}').map(l => l || "Uncategorized");
+    const categoryData = JSON.parse('{{ category_data | map(attribute="total_stock") | list | tojson | safe }}');
+
+    // Movement Chart
+    const movementCtx = document.getElementById('movementChart').getContext('2d');
+    new Chart(movementCtx, {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Stock In',
+                data: chartIn,
+                backgroundColor: '#1cc88a',
+                borderColor: '#1cc88a',
+                borderWidth: 1,
+                borderRadius: 4,
+                barPercentage: 0.6,
+            }, {
+                label: 'Stock Out',
+                data: chartOut,
+                backgroundColor: '#e74a3b',
+                borderColor: '#e74a3b',
+                borderWidth: 1,
+                borderRadius: 4,
+                barPercentage: 0.6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#2c3e50',
+                    bodyColor: '#2c3e50',
+                    borderColor: '#e2e6ea',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 10,
+                        maxRotation: 0
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        borderDash: [2, 2],
+                        drawBorder: false
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryData,
+                backgroundColor: [
+                    '#4e73df',
+                    '#1cc88a',
+                    '#36b9cc',
+                    '#f6c23e',
+                    '#e74a3b',
+                    '#858796',
+                    '#5a5c69',
+                    '#2e59d9'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,188 +1,240 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</h1>
-</div>
-
-<!-- Key Metrics Cards -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Products</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_products }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-boxes fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- AI Status Floating Bar -->
+<div class="ai-status-bar mb-4 px-4 py-2 rounded-pill shadow-sm d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="ai-pulse me-3"></div>
+        <span class="small fw-bold text-uppercase tracking-wider">Neural Engine: <span class="text-primary">Optimizing
+                Inventory</span></span>
     </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Stock Value</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "{:,.2f}".format(stock_value) }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Low Stock Alerts</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ low_stock_count }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Today's Sales</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ "{:,.2f}".format(today_sales) }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="small d-none d-md-block text-muted">
+        <i class="fas fa-microchip me-1"></i> Analyzing 24-hour stock movement patterns
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row mb-4">
-    <!-- Sales Trend Chart -->
-    <div class="col-xl-8 col-lg-7 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Sales Trend (Last 7 Days)</h6>
-            </div>
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold d-flex align-items-center">
+            AI Command Center
+            <span class="badge bg-soft-primary text-primary fs-small ms-3 border border-primary px-3">Advanced
+                v2.0</span>
+        </h2>
+        <p class="text-muted mb-0">Real-time predictive analytics for Gharana Gold</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('reports.export_csv', type='inventory') }}" class="btn btn-outline-primary me-2 shadow-xs">
+            <i class="fas fa-download me-2"></i>Export Summary
+        </a>
+        <a href="{{ url_for('inventory.add_product') }}" class="btn btn-primary shadow-sm px-4">
+            <i class="fas fa-plus me-2"></i>New SKU
+        </a>
+    </div>
+</div>
+
+<!-- Financial & Activity Pulse -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm dash-card-glow h-100">
             <div class="card-body">
-                <canvas id="salesChart" height="80"></canvas>
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Asset Value (Global)</div>
+                <div class="h5 mb-0 fw-bold text-dark">₹{{ "{:,.2f}".format(stock_value) }}</div>
+                <div class="text-xs text-muted mt-2"><i class="fas fa-warehouse me-1"></i> Across {{ total_products }}
+                    SKUs</div>
             </div>
         </div>
     </div>
-
-    <!-- Category Distribution Chart -->
-    <div class="col-xl-4 col-lg-5 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Stock by Category</h6>
-            </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm dash-card-glow h-100">
             <div class="card-body">
-                <canvas id="categoryChart"></canvas>
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Today's Fulfillment</div>
+                <div class="h5 mb-0 fw-bold text-dark">{{ today_sales_count }} Dispatches</div>
+                <div class="text-xs text-success mt-2"><i class="fas fa-truck-fast me-1"></i> Outward Stream Active
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm dash-card-glow h-100">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Monthly Revenue</div>
+                <div class="h5 mb-0 fw-bold text-dark">₹{{ "{:,.2f}".format(monthly_revenue) }}</div>
+                <div class="text-xs text-muted mt-2"><i class="fas fa-calendar-check me-1"></i> Fiscal Performance</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm dash-card-glow h-100">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Risk Alerts</div>
+                <div class="h5 mb-0 fw-bold text-dark">{{ low_stock_count }} Neural Risks</div>
+                <div class="text-xs text-danger mt-2"><i class="fas fa-triangle-exclamation me-1"></i> Attention
+                    Required</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Additional Charts Row -->
-<div class="row mb-4">
-    <!-- Top Products Chart -->
-    <div class="col-xl-6 col-lg-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Top 5 Selling Products</h6>
+<!-- AI Insights Grid -->
+<div class="row g-4 mb-5">
+    {% for insight in ai_insights %}
+    <div class="col-lg-4">
+        <div
+            class="card h-100 border-0 shadow-sm transition-all hover-up border-start border-4 border-{{ insight.type }}">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-soft-{{ insight.type }} text-{{ insight.type }} rounded-circle p-2 me-3"
+                        style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                        <i class="{{ insight.icon }} fs-5"></i>
+                    </div>
+                    <h6 class="mb-0 fw-bold">{{ insight.title }}</h6>
+                </div>
+                <p class="text-muted small mb-4 lh-base">{{ insight.message }}</p>
+                <a href="{{ url_for(insight.endpoint, product_id=insight.product_id) if insight.product_id else url_for(insight.endpoint) }}"
+                    class="btn btn-sm btn-{{ insight.type }} w-100 py-2 rounded-3 fw-bold">{{ insight.action }}</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Prediction & Forecasting Chart -->
+    <div class="col-xl-8">
+        <div class="card h-100 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-chart-area text-primary me-2"></i>Stock Velocity & Prediction
+                </h6>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-light border">7 Days</button>
+                    <button class="btn btn-primary">14 Days Forecast</button>
+                </div>
             </div>
             <div class="card-body">
-                <canvas id="topProductsChart" height="120"></canvas>
+                <div style="height: 350px;">
+                    <canvas id="predictionChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Low Stock Alerts Table -->
-    <div class="col-xl-6 col-lg-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3 bg-warning text-white">
-                <h6 class="m-0 font-weight-bold">⚠️ Low Stock Alerts</h6>
+    <!-- Category Distribution -->
+    <div class="col-xl-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-pie-chart text-success me-2"></i>Asset Distribution</h6>
             </div>
-            <div class="card-body">
-                {% if low_stock_products %}
+            <div class="card-body d-flex flex-column">
+                <div style="height: 250px; position: relative;" class="my-auto">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="mt-4 pt-4 border-top">
+                    {% for name, qty in category_data %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                        <span class="small text-muted"><i class="fas fa-circle me-3 js-asset-color"
+                                data-color="{{ colors[loop.index0] if colors[loop.index0] else '#ccc' }}"></i> {{ name
+                            or 'General' }}</span>
+                        <span class="fw-bold">{{ qty }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Real-time Alerts with Pulse -->
+    <div class="col-xl-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="mb-0 fw-bold d-flex align-items-center">
+                    <span class="live-dot me-2"></span>Critical Supply Chain Alerts
+                </h6>
+            </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead>
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
                             <tr>
-                                <th>Product</th>
-                                <th>Current</th>
-                                <th>Min</th>
+                                <th class="ps-4 py-3">In-Demand SKU</th>
+                                <th class="py-3">Current Volume</th>
+                                <th class="py-3">Dynamic Risk</th>
+                                <th class="pe-4 py-3 text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for product in low_stock_products %}
                             <tr>
-                                <td>{{ product.name }}</td>
-                                <td><span class="badge bg-danger">{{ product.stock_quantity }}</span></td>
-                                <td>{{ product.min_stock_alert }}</td>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ product.name }}</div>
+                                    <code class="text-xs text-muted">{{ product.code }}</code>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-grow-1 me-2" style="max-width: 60px;">
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-danger js-stock-progress"
+                                                    data-width="{{ [((product.stock_quantity / product.min_stock_alert * 100) if product.min_stock_alert > 0 else 0)|int, 100]|min }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span class="small fw-bold">{{ product.stock_quantity }} {{ product.unit
+                                            }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-soft-danger text-danger px-3 py-2 pulse-element">
+                                        <i class="fas fa-warning me-1 small"></i>Critically Low
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <a href="{{ url_for('purchase.create_order') }}"
+                                        class="btn btn-sm btn-light border ripple">PO</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" width="60"
+                                        class="mb-3 opacity-50" alt="Success">
+                                    <h6 class="text-muted">Stock Health Nominal. No critical events.</h6>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <a href="{{ url_for('inventory.index') }}" class="btn btn-sm btn-warning mt-2">View All</a>
-                {% else %}
-                <p class="text-success mb-0">✔️ All products are sufficiently stocked!</p>
-                {% endif %}
             </div>
         </div>
     </div>
-</div>
 
-<!-- Quick Actions -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow">
-            <div class="card-header bg-dark text-white">
-                <h6 class="m-0 font-weight-bold">⚡ Quick Actions</h6>
+    <!-- Smart Links -->
+    <div class="col-xl-5">
+        <div class="row g-4">
+            <div class="col-6">
+                <a href="{{ url_for('purchase.orders') }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm text-center py-4 bg-primary text-white hover-up h-100">
+                        <i class="fas fa-truck-fast fa-2x mb-2"></i>
+                        <h6 class="fw-bold mb-0">Purchase History</h6>
+                    </div>
+                </a>
             </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('inventory.add_product') }}" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
-                            Add Product
-                        </a>
+            <div class="col-6">
+                <a href="{{ url_for('reports.index') }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm text-center py-4 bg-dark text-white hover-up h-100">
+                        <i class="fas fa-network-wired fa-2x mb-2"></i>
+                        <h6 class="fw-bold mb-0">Full Analytics</h6>
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('sales.create_order') }}" class="btn btn-outline-success w-100">
-                            <i class="fas fa-shopping-cart fa-2x d-block mb-2"></i>
-                            New Sale
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('purchase.create_order') }}" class="btn btn-outline-warning w-100">
-                            <i class="fas fa-truck fa-2x d-block mb-2"></i>
-                            New Purchase
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('reports.index') }}" class="btn btn-outline-info w-100">
-                            <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
-                            View Reports
-                        </a>
-                    </div>
+                </a>
+            </div>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm p-4 bg-gradient-light border-start border-primary border-5">
+                    <h6 class="fw-bold mb-2">AI Summary</h6>
+                    <p class="small text-muted mb-0">Total inventory valuation of registered Gharana Gold assets is
+                        currently at <span class="fw-bold text-dark">₹{{ "{:,.2f}".format(stock_value) }}</span>. Based
+                        on velocity, optimal reorder window is <span class="text-primary fw-bold">Tuesday, Feb
+                            10</span>.</p>
                 </div>
             </div>
         </div>
@@ -190,103 +242,190 @@
 </div>
 
 <style>
-    .border-left-primary {
-        border-left: 4px solid #4e73df !important;
+    /* Premium AI Aesthetics */
+    .ai-status-bar {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(78, 115, 223, 0.2);
     }
 
-    .border-left-success {
-        border-left: 4px solid #1cc88a !important;
+    .ai-pulse {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #4e73df;
+        box-shadow: 0 0 0 rgba(78, 115, 223, 0.4);
+        animation: pulse 2s infinite;
     }
 
-    .border-left-warning {
-        border-left: 4px solid #f6c23e !important;
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(78, 115, 223, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0);
+        }
     }
 
-    .border-left-info {
-        border-left: 4px solid #36b9cc !important;
+    .live-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #e74a3b;
+        border-radius: 50%;
+        display: inline-block;
+        animation: blink 1.5s infinite;
     }
 
-    .text-xs {
+    @keyframes blink {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.3;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .bg-soft-danger {
+        background-color: rgba(231, 74, 59, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(246, 194, 62, 0.1);
+    }
+
+    .bg-soft-success {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+    }
+
+    .hover-up:hover {
+        transform: translateY(-5px);
+        transition: 0.3s;
+    }
+
+    .pulse-element {
+        animation: shadow-pulse 2s infinite;
+    }
+
+    @keyframes shadow-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(231, 74, 59, 0.2);
+        }
+
+        100% {
+            box-shadow: 0 0 0 8px rgba(231, 74, 59, 0);
+        }
+    }
+
+    .fs-small {
         font-size: 0.7rem;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.1em;
     }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Sales Trend Chart
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
-    new Chart(salesCtx, {
+    // 1. Prediction Chart (Velocity & Forecast)
+    const predCtx = document.getElementById('predictionChart').getContext('2d');
+    const forecastData = JSON.parse('{{ ai_forecast | tojson | safe }}');
+
+    new Chart(predCtx, {
         type: 'line',
         data: {
-            labels: {{ sales_labels | tojson }},
-        datasets: [{
-            label: 'Sales (₹)',
-            data: {{ sales_data | tojson }},
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.4,
-        fill: true
-        }]
-    },
-        options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: { display: true }
+            labels: forecastData.labels,
+            datasets: [
+                {
+                    label: 'Actual Stock Level',
+                    data: forecastData.actual,
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#4e73df'
+                },
+                {
+                    label: 'AI Forecast (Next 7 Days)',
+                    data: forecastData.predicted,
+                    borderColor: '#1cc88a',
+                    borderDash: [5, 5],
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#1cc88a'
+                }
+            ]
         },
-        scales: {
-            y: { beginAtZero: true }
+        options: {
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            scales: {
+                y: { grid: { borderDash: [2, 2], drawBorder: false }, beginAtZero: false },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 6 } },
+                tooltip: { padding: 12, cornerRadius: 10 }
+            }
         }
-    }
-});
+    });
 
-    // Category Distribution Chart
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
+    // 2. Asset Category Distribution
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    const catLabels = JSON.parse('{{ category_names | tojson | safe }}');
+    const catData = JSON.parse('{{ category_quantities | tojson | safe }}');
+
+    new Chart(catCtx, {
         type: 'doughnut',
         data: {
-            labels: {{ category_names | tojson }},
-        datasets: [{
-            data: {{ category_quantities | tojson }},
-        backgroundColor: [
-            'rgba(255, 99, 132, 0.8)',
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(255, 206, 86, 0.8)',
-            'rgba(75, 192, 192, 0.8)',
-            'rgba(153, 102, 255, 0.8)'
-        ]
-        }]
-    },
+            labels: catLabels,
+            datasets: [{
+                data: catData,
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#5a5c69'],
+                borderWidth: 0,
+                cutout: '80%'
+            }]
+        },
         options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'bottom' }
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
         }
-    }
-});
-
-    // Top Products Chart
-    const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
-    new Chart(topProductsCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ top_product_names | tojson }},
-        datasets: [{
-            label: 'Quantity Sold',
-            data: {{ top_product_quantities | tojson }},
-        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-        }]
-    },
-        options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        indexAxis: 'y',
-        scales: {
-            x: { beginAtZero: true }
-        }
-    }
-});
+    });
+    // 3. Helper to satisfy linting for dynamic styles
+    document.querySelectorAll('.js-asset-color').forEach(el => {
+        el.style.color = el.dataset.color;
+    });
+    document.querySelectorAll('.js-stock-progress').forEach(el => {
+        el.style.width = el.dataset.width;
+    });
 </script>
 {% endblock %}

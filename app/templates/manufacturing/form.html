@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="dashboard-header mb-4">
+            <div class="dashboard-title">
+                <h2 class="fw-bold"><i class="fas fa-hammer me-2 text-primary"></i>Record Production</h2>
+                <p class="text-muted mb-0">Add manufactured goods to inventory and update batch data</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-lg overflow-hidden glass-card">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold"><i class="fas fa-box me-2 text-muted"></i>SELECT
+                                PRODUCT</label>
+                            <input list="product_options"
+                                class="form-control border-0 bg-light rounded-pill px-4 shadow-none" name="product_name"
+                                placeholder="SELECT PRODUCT" required autocomplete="off">
+                            <datalist id="product_options">
+                                {% for product in products %}
+                                <option value="{{ product.name }}"> (Stock: {{ product.stock_quantity }} {{ product.unit
+                                    }})
+                                    {% endfor %}
+                            </datalist>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i
+                                    class="fas fa-plus-circle me-2 text-muted"></i>Manufacturing Quantity</label>
+                            <input type="number" class="form-control border-0 bg-light rounded-pill px-4 shadow-none"
+                                name="quantity" placeholder="0" min="1" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="fas fa-tag me-2 text-muted"></i>Batch Number
+                                (Optional)</label>
+                            <input type="text" class="form-control border-0 bg-light rounded-pill px-4 shadow-none"
+                                name="batch_number" placeholder="B-2025-001">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="fas fa-calendar-alt me-2 text-muted"></i>Expiry
+                                Date (Optional)</label>
+                            <input type="date" class="form-control border-0 bg-light rounded-pill px-4 shadow-none"
+                                name="expiry_date">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold"><i
+                                    class="fas fa-sticky-note me-2 text-muted"></i>Production Notes</label>
+                            <textarea class="form-control border-0 bg-light rounded-3 px-4 shadow-none" name="notes"
+                                rows="3" placeholder="Additional details about this production run..."></textarea>
+                        </div>
+
+                        <div class="col-12 mt-5 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow ripple">
+                                <i class="fas fa-check-circle me-2"></i>Update Inventory & Log
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('manufacturing.index') }}" class="text-decoration-none text-muted small">
+                <i class="fas fa-arrow-left me-1"></i> Cancel and go back
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    }
+
+    .form-control,
+    .form-select {
+        height: 50px;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.1) !important;
+    }
+
+    textarea.form-control {
+        height: auto;
+    }
+</style>
+{% endblock %}

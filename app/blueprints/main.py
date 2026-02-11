@@ -34,39 +34,21 @@ def dashboard():
         Product.stock_quantity <= Product.min_stock_alert
     ).count()
     
-    # Today's Sales
-    today = datetime.now().date()
-    today_sales = db.session.query(
-        func.sum(Order.grand_total)
+    # Today's Sales Activity
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_sales_count = Order.query.filter(
+        Order.type == 'SALE',
+        Order.date >= today_start
+    ).count()
+
+    # Monthly Revenue
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    monthly_revenue = db.session.query(
+        func.sum(Order.total_amount)
     ).filter(
         Order.type == 'SALE',
-        func.date(Order.date) == today
+        Order.date >= month_start
     ).scalar() or 0
-    
-    # Last 7 Days Sales (for chart)
-    sales_data = []
-    sales_labels = []
-    for i in range(6, -1, -1):
-        day = datetime.now() - timedelta(days=i)
-        day_total = db.session.query(
-            func.sum(Order.grand_total)
-        ).filter(
-            Order.type == 'SALE',
-            func.date(Order.date) == day.date()
-        ).scalar() or 0
-        sales_data.append(float(day_total))
-        sales_labels.append(day.strftime('%d %b'))
-    
-    # Top 5 Selling Products (by quantity sold)
-    top_products = db.session.query(
-        Product.name,
-        func.sum(OrderItem.quantity).label('total_qty')
-    ).join(OrderItem).join(Order).filter(
-        Order.type == 'SALE'
-    ).group_by(Product.id).order_by(func.sum(OrderItem.quantity).desc()).limit(5).all()
-    
-    top_product_names = [p[0] for p in top_products]
-    top_product_quantities = [int(p[1]) for p in top_products]
     
     # Category-wise Stock Distribution
     category_stock = db.session.query(
@@ -94,39 +76,38 @@ def dashboard():
         except Exception as e:
             print(f"Low stock email failed: {e}")
     
+    # Prepare data for category legend
+    category_data = zip(category_names, category_quantities)
+    category_colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#5a5c69']
+    
+    # Initialize company name if it doesn't exist
+    company_setting = Setting.query.filter_by(key='company_name').first()
+    if not company_setting or company_setting.value == '':
+        if not company_setting:
+            db.session.add(Setting(key='company_name', value='Gharana Gold'))
+        else:
+            company_setting.value = 'Gharana Gold'
+        db.session.commit()
+
+    # AI Engine Insights
+    from app.ai_engine import AIEngine
+    ai_insights = AIEngine.get_stock_insights()
+    ai_forecast = AIEngine.get_forecasting_data()
+
     return render_template('dashboard/index.html', 
-                         title='Dashboard',
+                         title='Gharana Gold | AI Dashboard',
                          total_products=total_products,
                          stock_value=round(stock_value, 2),
                          low_stock_count=low_stock_count,
-                         today_sales=round(today_sales, 2),
-                         sales_labels=sales_labels,
-                         sales_data=sales_data,
-                         top_product_names=top_product_names,
-                         top_product_quantities=top_product_quantities,
+                         today_sales_count=today_sales_count,
+                         monthly_revenue=round(monthly_revenue, 2),
                          category_names=category_names,
                          category_quantities=category_quantities,
-                         low_stock_products=low_stock_products)
+                         category_data=category_data,
+                         colors=category_colors,
+                         low_stock_products=low_stock_products,
+                         ai_insights=ai_insights,
+                         ai_forecast=ai_forecast)
 
-@main_bp.route('/settings', methods=['GET', 'POST'])
-@login_required
-def settings():
-    if request.method == 'POST':
-        keys = ['company_name', 'company_address', 'company_phone', 'default_gst_percent', 'financial_year']
-        
-        try:
-            for key in keys:
-                val = request.form.get(key)
-                setting = Setting.query.filter_by(key=key).first()
-                if not setting:
-                    setting = Setting(key=key, value=val)
-                    db.session.add(setting)
-                else:
-                    setting.value = val
-            db.session.commit()
-            flash('Settings saved successfully!', 'success')
-        except Exception as e:
-            flash(f'Error saving settings: {str(e)}', 'danger')
-            
-    return render_template('settings.html', title='System Settings')
+
 

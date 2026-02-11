@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, Response, send_file, flash, redirect, url_for
 from flask_login import login_required
-from app.models import Product, Order, User
+from app.models import Product, Order, User, Vendor
 from app.decorators import role_required
 import csv
 import io
@@ -57,40 +57,9 @@ def export_csv(type):
         
         filename = f'inventory_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
         
-    elif type == 'sales':
-        ws.title = "Sales Report"
-        headers = ['Order ID', 'Date', 'Customer', 'Total Amount', 'Discount', 'Grand Total', 'Status']
-        ws.append(headers)
-        
-        for cell in ws[1]:
-            cell.fill = header_fill
-            cell.font = header_font
-        
-        sales = Order.query.filter_by(type='SALE').all()
-        for s in sales:
-            c_name = s.customer.name if s.customer else 'Walk-in'
-            ws.append([
-                s.id,
-                s.date.strftime('%Y-%m-%d') if s.date else '',
-                c_name,
-                float(s.total_amount or 0),
-                float(s.discount or 0),
-                float(s.grand_total or 0),
-                s.status
-            ])
-        
-        # Add total
-        last_row = len(sales) + 2
-        ws[f'C{last_row}'] = 'TOTAL'
-        ws[f'C{last_row}'].font = Font(bold=True)
-        ws[f'F{last_row}'] = f'=SUM(F2:F{last_row-1})'
-        ws[f'F{last_row}'].font = Font(bold=True)
-        
-        filename = f'sales_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
-        
     elif type == 'purchase':
         ws.title = "Purchase Report"
-        headers = ['Order ID', 'Date', 'Supplier', 'Total Amount', 'Status']
+        headers = ['Order ID', 'Date', 'Vendor', 'Total Amount', 'Status']
         ws.append(headers)
         
         for cell in ws[1]:
@@ -99,11 +68,11 @@ def export_csv(type):
         
         purchases = Order.query.filter_by(type='PURCHASE').all()
         for p in purchases:
-            s_name = p.supplier.name if p.supplier else 'N/A'
+            v_name = p.vendor.name if p.vendor else 'N/A'
             ws.append([
                 p.id,
                 p.date.strftime('%Y-%m-%d') if p.date else '',
-                s_name,
+                v_name,
                 float(p.total_amount or 0),
                 p.status
             ])
@@ -116,6 +85,61 @@ def export_csv(type):
         ws[f'D{last_row}'].font = Font(bold=True)
         
         filename = f'purchase_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
+
+    elif type == 'vendors':
+        ws.title = "Vendor Directory"
+        headers = ['Vendor Name', 'Contact Person', 'Phone', 'Email', 'GSTIN', 'Address']
+        ws.append(headers)
+        
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+        
+        vendors = Vendor.query.all()
+        for v in vendors:
+            ws.append([
+                v.name,
+                v.contact_person or '',
+                v.phone or '',
+                v.email or '',
+                v.gstin or '',
+                v.address or ''
+            ])
+        
+        filename = f'vendor_directory_{datetime.now().strftime("%Y%m%d")}.xlsx'
+        
+    elif type == 'sales':
+        ws.title = "Sales Report"
+        headers = ['Order ID', 'Date', 'Customer', 'Total Amount', 'Tax', 'Grand Total', 'Status']
+        ws.append(headers)
+        
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            
+        sales = Order.query.filter_by(type='SALE').all()
+        for s in sales:
+            c_name = s.customer.name if s.customer else 'Guest'
+            ws.append([
+                s.id,
+                s.date.strftime('%Y-%m-%d') if s.date else '',
+                c_name,
+                float(s.total_amount or 0),
+                float(s.tax_amount or 0),
+                float(s.grand_total or 0),
+                s.status
+            ])
+            
+        # Add totals
+        last_row = len(sales) + 2
+        ws[f'C{last_row}'] = 'TOTALS'
+        ws[f'C{last_row}'].font = Font(bold=True)
+        ws[f'D{last_row}'] = f'=SUM(D2:D{last_row-1})'
+        ws[f'F{last_row}'] = f'=SUM(F2:F{last_row-1})'
+        ws[f'D{last_row}'].font = Font(bold=True)
+        ws[f'F{last_row}'].font = Font(bold=True)
+        
+        filename = f'sales_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
         
     else:
         return "Invalid Report Type", 400

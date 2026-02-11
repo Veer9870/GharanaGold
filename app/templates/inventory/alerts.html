@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Inventory Alerts</h2>
+        <p class="text-muted mb-0">All inventory warnings and critical notifications</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+        </a>
+    </div>
+</div>
+
+<!-- Alert Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-danger border-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="bg-danger-soft rounded-circle p-3 me-3">
+                        <i class="fas fa-times-circle fa-lg text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase">Out of Stock</div>
+                        <div class="fw-bold fs-3 text-danger">{{ out_of_stock|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-warning border-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="bg-warning-soft rounded-circle p-3 me-3">
+                        <i class="fas fa-exclamation-triangle fa-lg text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase">Low Stock</div>
+                        <div class="fw-bold fs-3 text-warning">{{ low_stock|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-info border-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="bg-info-soft rounded-circle p-3 me-3">
+                        <i class="fas fa-clock fa-lg text-info"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase">Expiring Soon</div>
+                        <div class="fw-bold fs-3 text-info">{{ expiring|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-dark border-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="bg-dark-soft rounded-circle p-3 me-3">
+                        <i class="fas fa-skull-crossbones fa-lg text-dark"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase">Expired</div>
+                        <div class="fw-bold fs-3 text-dark">{{ expired|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expired Products -->
+{% if expired %}
+<div class="card border-0 shadow-sm mb-4 border-top border-danger border-3">
+    <div class="card-header bg-white py-3 d-flex align-items-center">
+        <i class="fas fa-skull-crossbones text-danger me-3 fa-lg"></i>
+        <h5 class="mb-0 fw-bold text-danger">Expired Products</h5>
+        <span class="badge bg-danger ms-auto">{{ expired|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Expiry Date</th>
+                        <th>Stock</th>
+                        <th>Value at Risk</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in expired %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong>{{ product.name }}</strong>
+                            <div class="text-muted small"><code>{{ product.code }}</code></div>
+                        </td>
+                        <td><span class="badge bg-danger">{{ product.expiry_date }}</span></td>
+                        <td>{{ product.stock_quantity }} {{ product.unit }}</td>
+                        <td class="text-danger fw-bold">₹{{ "{:,.0f}".format(product.stock_quantity *
+                            (product.cost_price or 0)) }}</td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('inventory.adjust_stock', id=product.id) }}"
+                                class="btn btn-sm btn-outline-danger">
+                                Remove Stock
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Out of Stock Products -->
+{% if out_of_stock %}
+<div class="card border-0 shadow-sm mb-4 border-top border-danger border-3">
+    <div class="card-header bg-white py-3 d-flex align-items-center">
+        <i class="fas fa-times-circle text-danger me-3 fa-lg"></i>
+        <h5 class="mb-0 fw-bold text-danger">Out of Stock Products</h5>
+        <span class="badge bg-danger ms-auto">{{ out_of_stock|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Category</th>
+                        <th>Unit</th>
+                        <th>Alert Level</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in out_of_stock %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong>{{ product.name }}</strong>
+                            <div class="text-muted small"><code>{{ product.code }}</code></div>
+                        </td>
+                        <td>{{ product.category or '--' }}</td>
+                        <td>{{ product.unit }}</td>
+                        <td>{{ product.min_stock_alert }}</td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('inventory.adjust_stock', id=product.id) }}"
+                                class="btn btn-sm btn-success">
+                                <i class="fas fa-plus me-1"></i>Add Stock
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Low Stock Products -->
+{% if low_stock %}
+<div class="card border-0 shadow-sm mb-4 border-top border-warning border-3">
+    <div class="card-header bg-white py-3 d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle text-warning me-3 fa-lg"></i>
+        <h5 class="mb-0 fw-bold text-warning">Low Stock Products</h5>
+        <span class="badge bg-warning text-dark ms-auto">{{ low_stock|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Current Stock</th>
+                        <th>Alert Level</th>
+                        <th>Shortage</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in low_stock %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong>{{ product.name }}</strong>
+                            <div class="text-muted small"><code>{{ product.code }}</code></div>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-warning">{{ product.stock_quantity }}</span> {{ product.unit }}
+                        </td>
+                        <td>{{ product.min_stock_alert }} {{ product.unit }}</td>
+                        <td class="text-danger">
+                            -{{ product.min_stock_alert - product.stock_quantity }} {{ product.unit }}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('inventory.adjust_stock', id=product.id) }}"
+                                class="btn btn-sm btn-warning">
+                                <i class="fas fa-plus me-1"></i>Restock
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Expiring Soon Products -->
+{% if expiring %}
+<div class="card border-0 shadow-sm mb-4 border-top border-info border-3">
+    <div class="card-header bg-white py-3 d-flex align-items-center">
+        <i class="fas fa-clock text-info me-3 fa-lg"></i>
+        <h5 class="mb-0 fw-bold text-info">Expiring Soon (Next 30 Days)</h5>
+        <span class="badge bg-info ms-auto">{{ expiring|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                        <th>Stock</th>
+                        <th>Value at Risk</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in expiring %}
+                    {% set days_left = (product.expiry_date - today).days if today else 0 %}
+                    <tr>
+                        <td class="ps-4">
+                            <strong>{{ product.name }}</strong>
+                            <div class="text-muted small"><code>{{ product.code }}</code></div>
+                        </td>
+                        <td>{{ product.expiry_date }}</td>
+                        <td>
+                            {% if days_left <= 7 %} <span class="badge bg-danger">{{ days_left }} days</span>
+                                {% elif days_left <= 14 %} <span class="badge bg-warning text-dark">{{ days_left }}
+                                    days</span>
+                                    {% else %}
+                                    <span class="badge bg-info">{{ days_left }} days</span>
+                                    {% endif %}
+                        </td>
+                        <td>{{ product.stock_quantity }} {{ product.unit }}</td>
+                        <td class="text-warning fw-bold">₹{{ "{:,.0f}".format(product.stock_quantity *
+                            (product.cost_price or 0)) }}</td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('inventory.view_product', id=product.id) }}"
+                                class="btn btn-sm btn-outline-info">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- No Alerts -->
+{% if not expired and not out_of_stock and not low_stock and not expiring %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+        <h4 class="text-success">All Clear!</h4>
+        <p class="text-muted mb-0">No inventory alerts at this time. Great job managing your stock!</p>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .bg-danger-soft {
+        background-color: rgba(231, 74, 59, 0.1);
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(246, 194, 62, 0.1);
+    }
+
+    .bg-info-soft {
+        background-color: rgba(54, 185, 204, 0.1);
+    }
+
+    .bg-dark-soft {
+        background-color: rgba(90, 92, 105, 0.1);
+    }
+</style>
+{% endblock %}

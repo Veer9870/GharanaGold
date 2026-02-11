@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold d-flex align-items-center">
+            Manufacturing Center
+            <span class="badge bg-soft-success text-success fs-small ms-3 border border-success px-3">Production
+                Active</span>
+        </h2>
+        <p class="text-muted mb-0">Track and manage daily production output and inventory growth</p>
+    </div>
+    <div class="dashboard-actions d-flex gap-2">
+        <a href="{{ url_for('manufacturing.export_csv') }}" class="btn btn-outline-dark shadow-sm px-4 rounded-pill">
+            <i class="fas fa-file-csv me-2"></i>Export CSV
+        </a>
+        <a href="{{ url_for('manufacturing.new') }}" class="btn btn-primary shadow-sm px-4 rounded-pill">
+            <i class="fas fa-hammer me-2"></i>Record New Output
+        </a>
+    </div>
+</div>
+
+<!-- production Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-4 bg-primary text-white h-100">
+            <h6 class="text-uppercase small fw-bold opacity-75">Today's Output</h6>
+            <h2 class="fw-bold mb-0">{{ today_count }} <small class="fs-6 fw-normal">Units</small></h2>
+            <div class="mt-3 small">
+                <i class="fas fa-arrow-up me-1"></i> Live tracking active
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-4 bg-dark text-white h-100">
+            <h6 class="text-uppercase small fw-bold opacity-75">Monthly Velocity</h6>
+            <h2 class="fw-bold mb-0">{{ monthly_total }} <small class="fs-6 fw-normal">Units</small></h2>
+            <div class="mt-3 small text-primary">
+                <i class="fas fa-calendar-check me-1"></i> Current Month
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h6 class="mb-3 fw-bold"><i class="fas fa-chart-line me-2 text-primary"></i>Weekly Production Trend</h6>
+            <div style="height: 120px;">
+                <canvas id="weeklyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h6 class="mb-3 fw-bold"><i class="fas fa-chart-pie me-2 text-primary"></i>Today's Product Mix</h6>
+            <div style="height: 200px;">
+                <canvas id="todayChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm dash-card-glow p-4 h-100">
+            <h6 class="mb-3 fw-bold"><i class="fas fa-list-ul me-2 text-primary"></i>Product Breakdown</h6>
+            <div class="d-flex flex-column gap-2 overflow-auto" style="max-height: 200px;">
+                {% for name, count in today_items.items() %}
+                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded-3">
+                    <span class="fw-bold small">{{ name }}</span>
+                    <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                </div>
+                {% else %}
+                <div class="text-muted small text-center py-4">No production recorded today.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- log Table -->
+<div class="card border-0 shadow-sm overflow-hidden">
+    <div class="card-header bg-white py-3 border-0">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-history me-2 text-muted"></i>Recent Production Logs</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Timestamp</th>
+                        <th class="py-3">Product Identity</th>
+                        <th class="py-3">Quantity Produced</th>
+                        <th class="py-3">Batch/Notes</th>
+                        <th class="pe-4 py-3 text-end">Stock Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="transition-all hover-row">
+                        <td class="ps-4">
+                            <div class="small fw-bold">{{ log.date.strftime('%H:%M') }}</div>
+                            <div class="text-xs text-muted">{{ log.date.strftime('%d %b %Y') }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-soft-primary text-primary rounded-3 px-2 py-1 small fw-bold me-3">#PRD-{{
+                                    log.id }}</div>
+                                <div class="fw-bold text-dark">{{ log.product.name }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-soft-success text-success rounded-pill px-3">+ {{ log.quantity }} {{
+                                log.product.unit }}</span>
+                        </td>
+                        <td>
+                            <div class="small text-muted text-truncate" style="max-width: 250px;">{{ log.description }}
+                            </div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <span class="small fw-bold">Current: {{ log.product.stock_quantity }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="fas fa-industry fa-3x text-muted mb-3 opacity-25"></i>
+                            <h6 class="text-muted">No manufacturing logs found.</h6>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-success {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .badge-item {
+        transition: all 0.3s;
+        cursor: default;
+    }
+
+    .badge-item:hover {
+        background-color: #e3e6f0 !important;
+        transform: scale(1.05);
+    }
+
+    .dash-card-glow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.1) !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Weekly Trend Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(weeklyCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ weekly_labels | tojson | safe }}'),
+            datasets: [{
+                label: 'Production Volume',
+                data: JSON.parse('{{ weekly_values | tojson | safe }}'),
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#4e73df'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, display: false },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // Today's product Mix Chart
+    const todayCtx = document.getElementById('todayChart').getContext('2d');
+    const todayLabels = JSON.parse('{{ today_items.keys() | list | tojson | safe }}');
+    const todayData = JSON.parse('{{ today_items.values() | list | tojson | safe }}');
+
+    new Chart(todayCtx, {
+        type: 'doughnut',
+        data: {
+            labels: todayLabels,
+            datasets: [{
+                data: todayData,
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#5a5c69'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15,
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,123 +1,187 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">New Purchase Order</h1>
-    <a href="{{ url_for('purchase.orders') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
-
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="POST" id="purchaseForm">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Supplier *</label>
-                    <select class="form-select" name="supplier_id" required>
-                        <option value="">Select Supplier</option>
-                        {% for supplier in suppliers %}
-                        <option value="{{ supplier.id }}">{{ supplier.name }} - {{ supplier.gstin }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Order Date</label>
-                    <input type="text" class="form-control" value="{{ now }}" readonly>
-                </div>
-            </div>
-
-            <hr>
-            <h5>Order Items</h5>
-            <div id="itemsContainer">
-                <div class="row mb-3 item-row">
-                    <div class="col-md-5">
-                        <label class="form-label">Product *</label>
-                        <select class="form-select" name="product_id[]" required>
-                            <option value="">Select Product</option>
-                            {% for product in products %}
-                            <option value="{{ product.id }}" data-cost="{{ product.cost_price }}">
-                                {{ product.code }} - {{ product.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Quantity *</label>
-                        <input type="number" class="form-control quantity" name="quantity[]" min="1" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Cost Price *</label>
-                        <input type="number" step="0.01" class="form-control price" name="price[]" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Action</label>
-                        <button type="button" class="btn btn-success w-100" onclick="addItem()">
-                            <i class="fas fa-plus"></i> Add
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-shopping-cart me-2"></i> Create Purchase Order
-                    </button>
-                </div>
-            </div>
-        </form>
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Create Purchase Order</h2>
+        <p class="text-muted mb-0">Initiate a new procurement cycle for Gharana Gold stocks</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('purchase.orders') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+        </a>
     </div>
 </div>
 
-<script>
-    let itemCount = 1;
+<form method="POST" id="purchaseForm">
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-primary">PO Items</h5>
+                    <button type="button" class="btn btn-sm btn-soft-primary" onclick="addItem()">
+                        <i class="fas fa-plus me-2"></i>Add Line Item
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    <div id="itemsContainer">
+                        <!-- Single row template -->
+                        <div class="row mb-3 item-row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Product Name (Type or Select)</label>
+                                <input list="productsList" class="form-control border-light product-name-input"
+                                    name="product_name[]" placeholder="Type custom or select matching..." required
+                                    onchange="handleProductChange(this)">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Quantity</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control border-light quantity" name="quantity[]"
+                                        min="0.01" step="0.01" required oninput="updateTotals()">
+                                    <span class="input-group-text bg-light border-light small unit-label">Qty</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Unit Cost (₹)</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm border-light price"
+                                    name="price[]" placeholder="0.00" required oninput="updateTotals()">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0 mb-1"
+                                    onclick="removeItem(this)">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
+                    <datalist id="productsList">
+                        {% for product in products %}
+                        <option value="{{ product.name }}" data-cost="{{ product.cost_price }}"
+                            data-unit="{{ product.unit or 'Qty' }}">
+                            {% endfor %}
+                    </datalist>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3 border-0 shadow-sm small">
+                <i class="fas fa-info-circle me-2"></i> 🟢 <strong>Custom Products Allowed:</strong> Aap koi bhi naya
+                naam likh sakte hain, system use automatically inventory mein add kar lega.
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 2rem; z-index: 10;">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-dark">Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Procurement Partner (Vendor)</label>
+                        <select class="form-select bg-light border-0" name="vendor_id" required>
+                            <option value="">Choose Vendor...</option>
+                            {% for vendor in vendors %}
+                            <option value="{{ vendor.id }}" {% if selected_vendor_id==vendor.id %}selected{% endif %}>{{
+                                vendor.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="p-3 rounded mb-4" style="background-color: rgba(78, 115, 223, 0.05);">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Subtotal</span>
+                            <span class="fw-bold text-dark" id="subtotalDisplay">₹0.00</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">Net Total</span>
+                            <span class="fw-bold text-primary fs-4" id="grandTotalDisplay">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 shadow-sm rounded-3 fw-bold">
+                        <i class="fas fa-check-circle me-2"></i>Finalize Purchase Order
+                    </button>
+                    <p class="text-center small text-muted mt-3">Stock will be updated upon <strong>Goods Receipt
+                            (GRN)</strong>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
     function addItem() {
-        itemCount++;
         const container = document.getElementById('itemsContainer');
-        const newRow = document.createElement('div');
-        newRow.className = 'row mb-3 item-row';
-        newRow.innerHTML = `
-        <div class="col-md-5">
-            <select class="form-select" name="product_id[]" required>
-                <option value="">Select Product</option>
-                {% for product in products %}
-                <option value="{{ product.id }}" data-cost="{{ product.cost_price }}">
-                    {{ product.code }} - {{ product.name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <input type="number" class="form-control quantity" name="quantity[]" min="1" required>
-        </div>
-        <div class="col-md-3">
-            <input type="number" step="0.01" class="form-control price" name="price[]" required>
-        </div>
-        <div class="col-md-2">
-            <button type="button" class="btn btn-danger w-100" onclick="removeItem(this)">
-                <i class="fas fa-trash"></i> Remove
-            </button>
-        </div>
-    `;
+        const rows = container.querySelectorAll('.item-row');
+        const firstRow = rows[0];
+        const newRow = firstRow.cloneNode(true);
+
+        // Clear all inputs in the new row
+        newRow.querySelectorAll('input').forEach(input => input.value = '');
+        newRow.querySelector('.unit-label').innerText = 'Qty';
+
         container.appendChild(newRow);
     }
 
     function removeItem(btn) {
-        btn.closest('.item-row').remove();
+        const container = document.getElementById('itemsContainer');
+        if (container.querySelectorAll('.item-row').length > 1) {
+            btn.closest('.item-row').remove();
+            updateTotals();
+        }
     }
 
-    // Auto-fill cost price when product is selected
-    document.addEventListener('change', function (e) {
-        if (e.target.name === 'product_id[]') {
-            const selectedOption = e.target.options[e.target.selectedIndex];
-            const costPrice = selectedOption.getAttribute('data-cost');
-            const priceInput = e.target.closest('.item-row').querySelector('.price');
-            if (costPrice && priceInput) {
-                priceInput.value = costPrice;
+    function handleProductChange(input) {
+        const val = input.value;
+        const options = document.getElementById('productsList').options;
+        let selectedData = null;
+
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === val) {
+                selectedData = {
+                    cost: options[i].getAttribute('data-cost'),
+                    unit: options[i].getAttribute('data-unit')
+                };
+                break;
             }
         }
-    });
+
+        const row = input.closest('.item-row');
+        if (selectedData) {
+            if (selectedData.cost) row.querySelector('.price').value = parseFloat(selectedData.cost).toFixed(2);
+            if (selectedData.unit) row.querySelector('.unit-label').innerText = selectedData.unit;
+        }
+        updateTotals();
+    }
+
+    function updateTotals() {
+        let grandTotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.price').value) || 0;
+            grandTotal += (qty * price);
+        });
+
+        const formatted = '₹' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('subtotalDisplay').innerText = formatted;
+        document.getElementById('grandTotalDisplay').innerText = formatted;
+    }
 </script>
+
+<style>
+    .btn-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+        color: #4e73df;
+    }
+
+    .btn-soft-primary:hover {
+        background-color: #4e73df;
+        color: #fff;
+    }
+
+    .product-name-input:focus {
+        border-color: #4e73df;
+        box-shadow: none;
+    }
+</style>
 {% endblock %}

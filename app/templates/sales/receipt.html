@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tax Invoice #INV-{{ order.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            color: #000;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .invoice-box {
+            max-width: 210mm;
+            margin: auto;
+            padding: 10px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+            background: white;
+            min-height: 297mm;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #333;
+        }
+
+        .company-details {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .invoice-details {
+            text-align: right;
+        }
+
+        .table-bordered th,
+        .table-bordered td {
+            border: 1px solid #000 !important;
+            vertical-align: middle;
+            padding: 4px 8px;
+        }
+
+        .table thead th {
+            background-color: #f2f2f2;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .table tbody td {
+            font-size: 12px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .grand-total-row td {
+            background-color: #e6e6e6;
+            font-weight: bold;
+        }
+
+        .amount-words {
+            font-style: italic;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            .invoice-box {
+                box-shadow: none;
+                border: 0;
+                margin: 0;
+                width: 100%;
+                padding: 0;
+            }
+
+            body {
+                background-color: white;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="text-center no-print my-3">
+        <button onclick="window.print()" class="btn btn-primary shadow-sm"><i class="fas fa-print me-2"></i>Print Tax
+            Invoice</button>
+        <button onclick="history.back()" class="btn btn-secondary shadow-sm ms-2">Close</button>
+    </div>
+
+    <div class="invoice-box">
+        <!-- Header -->
+        <table style="width: 100%; margin-bottom: 20px;">
+            <tr>
+                <td width="60%">
+                    <div class="header-title">{{ company.company_name or 'Gharana Gold' }}</div>
+                    <div class="company-details">
+                        <div style="white-space: pre-wrap;">{{ company.company_address or 'Address Not Set' }}</div>
+                        {% if company.company_gstin %}GSTIN: <strong>{{ company.company_gstin }}</strong>{% endif %}<br>
+                        {% if company.company_email %}Email: {{ company.company_email }}{% endif %}
+                        {% if company.company_phone %} | Ph: {{ company.company_phone }}{% endif %}
+                    </div>
+                </td>
+                <td width="40%" class="invoice-details">
+                    <h4 class="fw-bold mb-1">TAX INVOICE</h4>
+                    <table class="table table-borderless table-sm mb-0 float-end" style="width: auto;">
+                        <tr>
+                            <td class="text-end py-0">Invoice No:</td>
+                            <td class="fw-bold py-0 ps-2">INV-{{ "%04d"|format(order.id) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-end py-0">Date:</td>
+                            <td class="fw-bold py-0 ps-2">{{ order.date.strftime('%d-%b-%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-end py-0">Place of Supply:</td>
+                            <td class="fw-bold py-0 ps-2">Maharashtra (27)</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Bill To Details -->
+        <div class="row mb-3 border p-2 mx-0">
+            <div class="col-6 border-end">
+                <small class="text-muted fw-bold text-uppercase">Billed To:</small>
+                {% if order.customer %}
+                <div class="fw-bold">{{ order.customer.name }}</div>
+                <div class="small">{{ order.customer.address or 'Address not provided' }}</div>
+                <div class="small">Ph: {{ order.customer.phone or '' }}</div>
+                {% if order.customer.gstin %}<div class="small fw-bold">GSTIN: {{ order.customer.gstin }}</div>{% endif
+                %}
+                {% else %}
+                <div class="fw-bold">Cash / Walking Customer</div>
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <small class="text-muted fw-bold text-uppercase">Payment Details:</small>
+                <div class="d-flex justify-content-between small">
+                    <span>Mode:</span> <span class="fw-bold">Immediate Payment</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Reference:</span> <span>#SALE-{{ order.id }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Format Table -->
+        <table class="table table-bordered mb-0">
+            <thead>
+                <tr>
+                    <th rowspan="2" width="3%">Sl.</th>
+                    <th rowspan="2" width="30%">Description of Goods</th>
+                    <th rowspan="2" width="8%">HSN/SAC</th>
+                    <th rowspan="2" width="7%">Qty</th>
+                    <th rowspan="2" width="8%">Rate</th>
+                    <th rowspan="2" width="10%">Taxable Value</th>
+                    <th colspan="2">CGST</th>
+                    <th colspan="2">SGST</th>
+                    <th rowspan="2" width="12%">Total Amount</th>
+                </tr>
+                <tr>
+                    <th width="5%">Rate</th>
+                    <th width="7%">Amt</th>
+                    <th width="5%">Rate</th>
+                    <th width="7%">Amt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set ns = namespace(total_taxable=0, total_cgst=0, total_sgst=0, total_qty=0) %}
+                {% for item in order.items %}
+
+                {% set gst_rate = item.product.gst_percent|float if item.product.gst_percent else 18.0 %}
+                {% set item_total = item.total|float %} <!-- Inclusive Total from DB -->
+                <!-- Back calculate Taxable -->
+                {% set taxable_val = item_total / (1 + (gst_rate / 100)) %}
+                {% set tax_amt = item_total - taxable_val %}
+                {% set cgst_amt = tax_amt / 2 %}
+                {% set sgst_amt = tax_amt / 2 %}
+                {% set rate_half = gst_rate / 2 %}
+
+                <!-- Accumulate -->
+                {% set ns.total_taxable = ns.total_taxable + taxable_val %}
+                {% set ns.total_cgst = ns.total_cgst + cgst_amt %}
+                {% set ns.total_sgst = ns.total_sgst + sgst_amt %}
+                {% set ns.total_qty = ns.total_qty + item.quantity %}
+
+                <tr>
+                    <td class="text-center">{{ loop.index }}</td>
+                    <td>
+                        <span class="fw-bold">{{ item.product.name }}</span>
+                        {% if item.product.batch_number %}<br><small class="text-muted">Batch: {{
+                            item.product.batch_number }}</small>{% endif %}
+                    </td>
+                    <td class="text-center">0910</td>
+                    <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
+                    <td class="text-right">{{ "{:,.2f}".format(item_total / item.quantity if item.quantity else 0) }}
+                    </td>
+                    <!-- Using inclusive rate for display or taxable rate? Usually Taxable Rate. calculating taxable rate -->
+                    <!-- Actual Rate Pre-Tax -->
+                    <!-- <td class="text-right">{{ "{:,.2f}".format(taxable_val / item.quantity) }}</td> -->
+
+                    <td class="text-right">{{ "{:,.2f}".format(taxable_val) }}</td>
+
+                    <td class="text-center">{{ rate_half }}%</td>
+                    <td class="text-right">{{ "{:,.2f}".format(cgst_amt) }}</td>
+
+                    <td class="text-center">{{ rate_half }}%</td>
+                    <td class="text-right">{{ "{:,.2f}".format(sgst_amt) }}</td>
+
+                    <td class="text-right fw-bold">{{ "{:,.2f}".format(item_total) }}</td>
+                </tr>
+                {% endfor %}
+
+                <!-- Blank Rows -->
+                {% if order.items|length < 5 %} {% for i in range(5 - order.items|length) %} <tr style="height: 30px;">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+
+                    <!-- Totals Row -->
+                    <tr class="grand-total-row">
+                        <td colspan="3" class="text-right">Total</td>
+                        <td class="text-center">{{ ns.total_qty }}</td>
+                        <td></td>
+                        <td class="text-right">{{ "{:,.2f}".format(ns.total_taxable) }}</td>
+                        <td></td>
+                        <td class="text-right">{{ "{:,.2f}".format(ns.total_cgst) }}</td>
+                        <td></td>
+                        <td class="text-right">{{ "{:,.2f}".format(ns.total_sgst) }}</td>
+                        <td class="text-right">{{ "{:,.2f}".format(order.grand_total) }}</td>
+                    </tr>
+            </tbody>
+        </table>
+
+        <div class="row mt-2">
+            <div class="col-7">
+                <div class="amount-words" id="amountInWords"></div>
+                <div class="border p-2 mt-2 small">
+                    <strong>Terms and Conditions:</strong>
+                    <div style="white-space: pre-wrap;" class="ps-3 mb-0">{{ company.terms_conditions or '1. Goods once
+                        sold will not be taken back.\n2. Interest @18% p.a. will be charged for delayed payment.' }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-5">
+                <table class="table table-sm table-bordered mb-0">
+                    <tr>
+                        <td class="small">Taxable Amount</td>
+                        <td class="text-right fw-bold">{{ "{:,.2f}".format(ns.total_taxable) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="small">Add: CGST</td>
+                        <td class="text-right">{{ "{:,.2f}".format(ns.total_cgst) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="small">Add: SGST</td>
+                        <td class="text-right">{{ "{:,.2f}".format(ns.total_sgst) }}</td>
+                    </tr>
+                    <tr class="bg-light">
+                        <td class="fw-bold">Grand Total</td>
+                        <td class="text-right fw-bold fs-5">₹{{ "{:,.2f}".format(order.grand_total) }}</td>
+                    </tr>
+                </table>
+                <div class="text-center mt-5 mb-0">
+                    <div style="border-bottom: 1px solid #000; width: 80%; margin: auto; height: 50px;"></div>
+                    <small class="fw-bold">Authorized Signatory</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="position-absolute bottom-0 w-100 text-center small text-muted pb-2">
+            This is a Computer Generated Tax Invoice.
+        </div>
+    </div>
+
+    <script>
+        function numberToWords(number) {
+            const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            if (number === 0) return 'Zero Rupees Only';
+            let words = '';
+            if (Math.floor(number / 10000000) > 0) { words += numberToWords(Math.floor(number / 10000000)) + ' Crore '; number %= 10000000; }
+            if (Math.floor(number / 100000) > 0) { words += numberToWords(Math.floor(number / 100000)) + ' Lakh '; number %= 100000; }
+            if (Math.floor(number / 1000) > 0) { words += numberToWords(Math.floor(number / 1000)) + ' Thousand '; number %= 1000; }
+            if (Math.floor(number / 100) > 0) { words += units[Math.floor(number / 100)] + ' Hundred '; number %= 100; }
+            if (number > 0) { if (words !== '') words += 'and '; if (number < 10) words += units[number]; else if (number < 20) words += teens[number - 10]; else { words += tens[Math.floor(number / 10)]; if (number % 10 > 0) words += ' ' + units[number % 10]; } }
+            return words;
+        }
+        const totalAmount = parseInt("{{ order.grand_total | int or 0 }}");
+        document.getElementById('amountInWords').innerText = 'Amount (in words): ' + numberToWords(totalAmount) + ' Rupees Only';
+    </script>
+</body>
+
+</html>

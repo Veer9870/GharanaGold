@@ -1,52 +1,122 @@
-<div class="p-3">
-    <h4 class="text-white">ERP System</h4>
-    <p class="text-muted small">Welcome, {{ current_user.username }}</p>
-    <hr class="bg-light">
+<div class="sidebar-brand d-flex flex-column align-items-center">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Gharana Gold Logo"
+        class="rounded-circle mb-3 shadow-sm border border-2 border-white"
+        style="width: 100px; height: 100px; object-fit: cover; background: white;">
+    <h5 class="fw-bold mb-0 text-primary">Gharana Gold</h5>
+    <div class="small text-muted mt-1" style="font-size: 0.75rem;">Premium Spices & Essentials</div>
+</div>
 
+<div class="px-3 mt-4">
+    <div class="text-xs font-weight-bold text-uppercase text-muted mb-2 px-3">Main Menu</div>
     <ul class="nav flex-column">
         <li class="nav-item">
-            <a href="{{ url_for('main.dashboard') }}" class="nav-link"><i class="fas fa-tachometer-alt me-2"></i>
-                Dashboard</a>
+            <a href="{{ url_for('main.dashboard') }}"
+                class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-pie"></i>
+                Dashboard
+            </a>
         </li>
 
         {% if current_user.has_role('super_admin', 'admin', 'manager', 'store_user') %}
         <li class="nav-item">
-            <a href="{{ url_for('inventory.index') }}" class="nav-link"><i class="fas fa-boxes me-2"></i> Inventory</a>
+            <a href="#inventorySubmenu" data-bs-toggle="collapse"
+                aria-expanded="{% if 'inventory' in request.endpoint %}true{% else %}false{% endif %}"
+                class="nav-link d-flex align-items-center justify-content-between {% if 'inventory' in request.endpoint %}active{% endif %}">
+                <span><i class="fas fa-boxes-stacked me-2"></i>Inventory</span>
+                <i class="fas fa-chevron-down small"></i>
+            </a>
+            <ul class="collapse list-unstyled ps-3 {% if 'inventory' in request.endpoint %}show{% endif %}"
+                id="inventorySubmenu">
+                <li>
+                    <a href="{{ url_for('inventory.index') }}" class="nav-link py-2 text-muted small">
+                        <i class="fas fa-list me-2"></i>All Products
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('inventory.dashboard') }}" class="nav-link py-2 text-muted small">
+                        <i class="fas fa-chart-line me-2"></i>Analytics
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('inventory.alerts') }}" class="nav-link py-2 text-muted small">
+                        <i class="fas fa-bell me-2"></i>Stock Alerts
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('inventory.stock_history') }}" class="nav-link py-2 text-muted small">
+                        <i class="fas fa-history me-2"></i>Movements
+                    </a>
+                </li>
+            </ul>
         </li>
         {% endif %}
 
         {% if current_user.has_role('super_admin', 'admin', 'manager') %}
         <li class="nav-item">
-            <a href="{{ url_for('purchase.suppliers') }}" class="nav-link"><i class="fas fa-truck me-2"></i>
-                Suppliers</a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('purchase.orders') }}" class="nav-link"><i class="fas fa-shopping-cart me-2"></i>
-                Purchase</a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('sales.customers') }}" class="nav-link"><i class="fas fa-users me-2"></i> Customers</a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('sales.orders') }}" class="nav-link"><i class="fas fa-cash-register me-2"></i> Sales</a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('reports.index') }}" class="nav-link"><i class="fas fa-chart-line me-2"></i> Reports</a>
+            <a href="{{ url_for('manufacturing.index') }}"
+                class="nav-link {% if 'manufacturing' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-industry"></i>
+                Manufacturing
+            </a>
         </li>
         {% endif %}
 
+        {% if current_user.has_role('super_admin', 'admin', 'manager') %}
+        <li class="nav-item">
+            <a href="{{ url_for('purchase.vendors') }}"
+                class="nav-link {% if 'vendors' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-handshake"></i>
+                Vendors
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('purchase.orders') }}"
+                class="nav-link {% if 'purchase' in request.endpoint and 'orders' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-truck-loading"></i>
+                Purchase
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('sales.index') }}"
+                class="nav-link {% if 'sales' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-arrow-trend-up"></i>
+                Sales
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('reports.index') }}"
+                class="nav-link {% if 'reports' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-file-contract"></i>
+                Reports
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+
+    <div class="text-xs font-weight-bold text-uppercase text-muted mb-2 mt-4 px-3">Administration</div>
+    <ul class="nav flex-column">
         {% if current_user.has_role('super_admin', 'admin') %}
         <li class="nav-item">
-            <a href="{{ url_for('auth.users') }}" class="nav-link"><i class="fas fa-users-cog me-2"></i> Users</a>
+            <a href="{{ url_for('auth.users') }}"
+                class="nav-link {% if 'users' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-user-shield"></i>
+                User Access
+            </a>
         </li>
         <li class="nav-item">
-            <a href="{{ url_for('main.settings') }}" class="nav-link"><i class="fas fa-cog me-2"></i> Settings</a>
+            <a href="{{ url_for('settings.general') }}"
+                class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                Company Settings
+            </a>
         </li>
         {% endif %}
-
-        <li class="nav-item mt-4">
-            <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger"><i class="fas fa-sign-out-alt me-2"></i>
-                Logout</a>
-        </li>
     </ul>
+
+    <div class="mt-4 px-3 pt-3 border-top">
+        <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger">
+            <i class="fas fa-door-open"></i>
+            Logout
+        </a>
+    </div>
 </div>

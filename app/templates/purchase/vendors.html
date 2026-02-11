@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Partner Network Status -->
+<div class="ai-status-bar mb-4 px-4 py-2 rounded-pill shadow-sm d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="network-pulse me-3"></div>
+        <span class="small fw-bold text-uppercase tracking-wider">Integrity Monitor: <span class="text-primary">Network
+                Optimal</span></span>
+    </div>
+    <div class="small d-none d-md-block text-muted">
+        <i class="fas fa-handshake me-1"></i> Tracking {{ vendors|length }} verified procurement partners
+    </div>
+</div>
+
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold d-flex align-items-center">
+            Global Supply Network
+            <span class="badge bg-soft-primary text-primary fs-small ms-3 border border-primary px-3">Verified
+                Partners</span>
+        </h2>
+        <p class="text-muted mb-0">Strategic sourcing and procurement relationship management</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('reports.export_csv', type='vendors') }}"
+            class="btn btn-outline-primary me-2 shadow-xs border-0">
+            <i class="fas fa-file-export me-2"></i>Export CRM
+        </a>
+        <a href="{{ url_for('purchase.add_vendor') }}" class="btn btn-primary shadow-sm px-4">
+            <i class="fas fa-plus-circle me-2"></i>Register Partner
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden dash-card-glow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Partner Identity</th>
+                        <th class="py-3">Communication Channel</th>
+                        <th class="py-3">Compliance & GSTIN</th>
+                        <th class="py-3">AI Reliability</th>
+                        <th class="pe-4 py-3 text-end">Relationship Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in vendors %}
+                    <tr class="transition-all hover-row">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative me-3">
+                                    <img src="https://ui-avatars.com/api/?name={{ vendor.name }}&background=4e73df&color=fff&size=45"
+                                        class="rounded-circle border" alt="Avatar">
+                                    <span
+                                        class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1"
+                                        style="width: 12px; height: 12px;"></span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark fs-6">{{ vendor.name }}</div>
+                                    <div class="text-xs text-muted d-flex align-items-center">
+                                        <i class="fas fa-user-tie me-1"></i> {{ vendor.contact_person or 'No Contact
+                                        Assigned' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="small fw-bold"><i class="fas fa-mobile-screen me-2 text-muted"></i>{{
+                                    vendor.phone or '--' }}</span>
+                                <span class="text-xs text-primary underline-on-hover cursor-pointer mt-1"><i
+                                        class="fas fa-envelope-open me-2 text-muted"></i>{{ vendor.email or '--'
+                                    }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="badge-set">
+                                {% if vendor.gstin %}
+                                <span class="badge bg-soft-info text-info border border-info px-3 py-2 fw-normal mb-1">
+                                    <i class="fas fa-fingerprint me-2"></i>{{ vendor.gstin }}
+                                </span>
+                                {% else %}
+                                <span
+                                    class="badge bg-soft-secondary text-secondary border border-secondary px-3 py-2 fw-normal mb-1">
+                                    Unregistered
+                                </span>
+                                {% endif %}
+                                <div class="text-xs text-muted opacity-75">Verified Identity</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% set score = vendor.reliability_score or 100 %}
+                                {% set score_class = 'reliability-success' if score >= 90 else ('reliability-warning' if
+                                score >= 70 else 'reliability-danger') %}
+                                <div class="radial-progress-mini me-2 d-flex align-items-center justify-content-center border {{ score_class }}"
+                                    style="width: 35px; height: 35px; border-radius: 50%;">
+                                    <span class="text-xs fw-bold">{{ score }}%</span>
+                                </div>
+                                <div
+                                    class="small fw-bold {% if score >= 90 %}text-success{% elif score >= 70 %}text-warning{% else %}text-danger{% endif %}">
+                                    {% if score >= 95 %}Elite Tier
+                                    {% elif score >= 85 %}Preferred
+                                    {% elif score >= 70 %}Standard
+                                    {% else %}Risk Alert
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border-0 ripple rounded-circle"
+                                    data-bs-toggle="dropdown" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-ellipsis-v text-muted small"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                                    <li><a class="dropdown-item py-2"
+                                            href="{{ url_for('purchase.edit_vendor', id=vendor.id) }}">
+                                            <i class="fas fa-edit text-primary me-2 small"></i>Update Protocol
+                                        </a></li>
+                                    <li><a class="dropdown-item py-2"
+                                            href="{{ url_for('purchase.create_order', vendor_id=vendor.id) }}">
+                                            <i class="fas fa-shopping-cart text-success me-2 small"></i>Create Purchase
+                                            Order
+                                        </a></li>
+                                    <li><a class="dropdown-item py-2"
+                                            href="{{ url_for('purchase.orders', vendor_id=vendor.id) }}">
+                                            <i class="fas fa-history text-muted me-2 small"></i>Order History
+                                        </a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item text-danger py-2" href="#">
+                                            <i class="fas fa-ban me-2 small"></i>Suspend Partner
+                                        </a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="fas fa-users-slash fa-3x text-muted mb-3 opacity-25"></i>
+                                <h6 class="text-muted fw-normal">No registered partners found in the network.</h6>
+                                <p class="text-xs text-muted">Initialize your first procurement relationship to begin
+                                    tracking assets.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ai-status-bar {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(78, 115, 223, 0.2);
+    }
+
+    .network-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4e73df;
+        box-shadow: 0 0 0 rgba(78, 115, 223, 0.4);
+        animation: netPulse 2s infinite;
+    }
+
+    @keyframes netPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(78, 115, 223, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0);
+        }
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .bg-soft-info {
+        background-color: rgba(54, 162, 204, 0.1);
+    }
+
+    .bg-soft-secondary {
+        background-color: rgba(133, 135, 150, 0.1);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .fs-small {
+        font-size: 0.7rem;
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.1em;
+    }
+
+    .hover-row:hover {
+        background-color: #f8f9fc !important;
+    }
+
+    .dash-card-glow {
+        transition: box-shadow 0.3s;
+    }
+
+    .dash-card-glow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.1) !important;
+    }
+
+    .underline-on-hover:hover {
+        text-decoration: underline;
+    }
+
+    .reliability-success {
+        border: 3px solid #1cc88a !important;
+    }
+
+    .reliability-warning {
+        border: 3px solid #f6c23e !important;
+    }
+
+    .reliability-danger {
+        border: 3px solid #e74a3b !important;
+    }
+</style>
+{% endblock %}

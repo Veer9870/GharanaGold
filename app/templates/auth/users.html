@@ -1,39 +1,106 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">User Management</h1>
+<!-- Security Matrix Status -->
+<div class="ai-status-bar mb-4 px-4 py-2 rounded-pill shadow-sm d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="security-pulse me-3"></div>
+        <span class="small fw-bold text-uppercase tracking-wider">Security Protocol: <span
+                class="text-primary">Encryption Active</span></span>
+    </div>
+    <div class="small d-none d-md-block text-muted">
+        <i class="fas fa-lock me-1"></i> Monitoring {{ users|length }} authorized access tokens across the network
+    </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold d-flex align-items-center">
+            Personnel Matrix
+            <span class="badge bg-soft-primary text-primary fs-small ms-3 border border-primary px-3">Access
+                Control</span>
+        </h2>
+        <p class="text-muted mb-0">Authorized biometric-mapped accounts for Gharana Gold ERP</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('auth.audit_logs') }}" class="btn btn-outline-primary shadow-xs me-2 border-0">
+            <i class="fas fa-key me-2"></i>Audit Logs
+        </a>
+        <a href="{{ url_for('auth.add_user') }}" class="btn btn-primary shadow-sm px-4">
+            <i class="fas fa-user-plus me-2"></i>Provision Account
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden dash-card-glow">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
                     <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Created</th>
+                        <th class="ps-4 py-3">Account Identity</th>
+                        <th class="py-3">Permission Level</th>
+                        <th class="py-3">Current Status</th>
+                        <th class="py-3">Initial Sync</th>
+                        <th class="pe-4 py-3 text-end">Access Management</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
-                    <tr>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
+                    <tr class="transition-all hover-row">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative">
+                                    <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=4e73df&color=fff&size=40"
+                                        class="rounded-circle border border-2 border-white shadow-sm me-3" alt="Avatar">
+                                    {% if user.is_active %}
+                                    <span
+                                        class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1 me-3"
+                                        style="width: 10px; height: 10px;"></span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ user.username }}</div>
+                                    <div class="text-xs text-muted">{{ user.email or 'Hidden Token' }}</div>
+                                </div>
+                            </div>
+                        </td>
                         <td>
-                            <span class="badge bg-info">{{ user.role.replace('_', ' ').title() }}</span>
+                            <span
+                                class="badge rounded-pill bg-soft-primary text-primary border border-primary px-3 py-2 fw-normal">
+                                <i class="fas fa-microchip me-2 small"></i>{{ user.role.replace('_', ' ').title() }}
+                            </span>
                         </td>
                         <td>
                             {% if user.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            <div class="d-flex align-items-center">
+                                <span
+                                    class="badge bg-soft-success text-success px-3 py-1 rounded-pill fw-normal">ACTIVE</span>
+                                <span class="small text-muted ms-2 text-xs">Live Sync</span>
+                            </div>
                             {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
+                            <span
+                                class="badge bg-soft-secondary text-secondary px-3 py-1 rounded-pill fw-normal">REVOKED</span>
                             {% endif %}
                         </td>
-                        <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                        <td>
+                            <div class="small fw-bold text-dark">{{ user.created_at.strftime('%d %b %Y') if
+                                user.created_at else 'Phase 1' }}</div>
+                            <div class="text-xs text-muted">Authorized Arrival</div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="btn-group">
+                                <a href="{{ url_for('auth.edit_user', id=user.id) }}"
+                                    class="btn btn-sm btn-light border-0 ripple rounded-circle me-1"
+                                    style="width: 32px; height: 32px;"><i
+                                        class="fas fa-sliders text-muted small"></i></a>
+                                <a href="{{ url_for('auth.delete_user', id=user.id) }}"
+                                    onclick="return confirm('Are you sure? This action cannot be undone.');"
+                                    class="btn btn-sm btn-light border-0 ripple rounded-circle"
+                                    style="width: 32px; height: 32px;"><i
+                                        class="fas fa-trash-can text-danger opacity-50 small"></i></a>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -41,4 +108,71 @@
         </div>
     </div>
 </div>
+
+<style>
+    .ai-status-bar {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(78, 115, 223, 0.2);
+    }
+
+    .security-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4e73df;
+        box-shadow: 0 0 0 rgba(78, 115, 223, 0.4);
+        animation: secPulse 2s infinite;
+    }
+
+    @keyframes secPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(78, 115, 223, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0);
+        }
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .bg-soft-success {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-soft-secondary {
+        background-color: rgba(133, 135, 150, 0.1);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .fs-small {
+        font-size: 0.7rem;
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.1em;
+    }
+
+    .hover-row:hover {
+        background-color: #f8f9fc !important;
+    }
+
+    .dash-card-glow {
+        transition: box-shadow 0.3s;
+    }
+
+    .dash-card-glow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.1) !important;
+    }
+</style>
 {% endblock %}

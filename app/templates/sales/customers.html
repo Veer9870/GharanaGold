@@ -1,37 +1,86 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Customer Management</h1>
-    <a href="{{ url_for('sales.add_customer') }}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus"></i> Add New Customer
-    </a>
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Customer Management (CRM)</h2>
+        <p class="text-muted mb-0">Manage registered customers and recurring clients</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('sales.add_customer') }}" class="btn btn-primary shadow-sm px-4">
+            <i class="fas fa-plus-circle me-2"></i>Register New Client
+        </a>
+    </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="card border-0 shadow-sm overflow-hidden dash-card-glow">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
                     <tr>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>GSTIN</th>
-                        <th>Actions</th>
+                        <th class="ps-4 py-3">Client Identity</th>
+                        <th class="py-3">Communication</th>
+                        <th class="py-3">GSTIN Sync</th>
+                        <th class="py-3">Lifetime Value</th>
+                        <th class="pe-4 py-3 text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for customer in customers %}
-                    <tr>
-                        <td>{{ customer.name }}</td>
-                        <td>{{ customer.phone }}</td>
-                        <td>{{ customer.email }}</td>
-                        <td>{{ customer.gstin }}</td>
+                    <tr class="transition-all hover-row">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ customer.name }}&background=4e73df&color=fff&size=40"
+                                    class="rounded-circle border me-3" alt="Avatar">
+                                <div>
+                                    <div class="fw-bold text-dark">{{ customer.name }}</div>
+                                    <div class="text-xs text-muted">{{ customer.address or 'No address registered' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                         <td>
-                            <a href="{{ url_for('sales.edit_customer', id=customer.id) }}"
-                                class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-edit"></i>
+                            <div class="small fw-bold"><i class="fas fa-phone me-2 text-muted"></i>{{ customer.phone or
+                                '--' }}</div>
+                            <div class="text-xs text-primary"><i class="fas fa-envelope me-2 text-muted"></i>{{
+                                customer.email or '--' }}</div>
+                        </td>
+                        <td>
+                            {% if customer.gstin %}
+                            <span class="badge bg-soft-info text-info border border-info px-3 py-1">{{ customer.gstin
+                                }}</span>
+                            {% else %}
+                            <span class="badge bg-soft-secondary text-secondary px-3 py-1">UNREGISTERED</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">₹{{
+                                "{:,.2f}".format(customer.orders|sum(attribute='total_amount')) }}</div>
+                            <div class="text-xs text-success">{{ customer.orders|length }} Order{{ 's' if
+                                customer.orders|length != 1 else '' }}</div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="btn-group">
+                                <a href="{{ url_for('sales.edit_customer', id=customer.id) }}"
+                                    class="btn btn-sm btn-outline-primary" title="Edit Customer">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('sales.delete_customer', id=customer.id) }}"
+                                    class="btn btn-sm btn-outline-danger" title="Delete Customer"
+                                    onclick="return confirm('Are you sure you want to delete {{ customer.name }}?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="fas fa-users-slash fa-3x text-muted mb-3 opacity-25"></i>
+                            <h6 class="text-muted">No registered clients found. Start registering partners.</h6>
+                            <a href="{{ url_for('sales.add_customer') }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus me-2"></i>Add First Customer
                             </a>
                         </td>
                     </tr>
@@ -41,4 +90,30 @@
         </div>
     </div>
 </div>
+
+<style>
+    .bg-soft-info {
+        background-color: rgba(54, 185, 204, 0.1);
+    }
+
+    .bg-soft-secondary {
+        background-color: rgba(133, 135, 150, 0.1);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .transition-all:hover {
+        background-color: #f8f9fc !important;
+    }
+
+    .dash-card-glow {
+        transition: box-shadow 0.3s;
+    }
+
+    .dash-card-glow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.15) !important;
+    }
+</style>
 {% endblock %}

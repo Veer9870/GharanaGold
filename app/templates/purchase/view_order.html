@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Order #{{ order.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .invoice-container {
+            max-width: 210mm;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-logo {
+            color: #4e73df;
+            font-weight: 800;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .invoice-header {
+            border-bottom: 2px solid #e3e6f0;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .table th {
+            background-color: #f8f9fc;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #858796;
+        }
+
+        @media print {
+            body {
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                border: none;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <div class="text-center mb-4 no-print">
+            <button onclick="window.print()" class="btn btn-primary rounded-pill px-4 shadow-sm me-2"><i
+                    class="fas fa-print me-2"></i>Print PO</button>
+            <a href="{{ url_for('purchase.orders') }}" class="btn btn-light border rounded-pill px-4 shadow-sm"><i
+                    class="fas fa-arrow-left me-2"></i>Back to List</a>
+        </div>
+
+        <div class="invoice-container rounded-3 border">
+            <!-- Header -->
+            <div class="row invoice-header align-items-center">
+                <div class="col-6">
+                    <div class="brand-logo mb-1"><i class="fas fa-cubes me-2"></i>Gharana Gold</div>
+                    <div class="small text-muted">Internal Procurement Document</div>
+                </div>
+                <div class="col-6 text-end">
+                    <h2 class="fw-bold mb-0 text-dark">PURCHASE ORDER</h2>
+                    <div class="text-primary fw-bold">#PO-{{ "%05d"|format(order.id) }}</div>
+                    <div class="small text-muted">Created: {{ order.date.strftime('%d %b %Y') }}</div>
+                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="row mb-5">
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded border h-100">
+                        <label class="small text-uppercase fw-bold text-muted mb-2">Vendor</label>
+                        {% if order.vendor %}
+                        <h5 class="fw-bold text-dark mb-1">{{ order.vendor.name }}</h5>
+                        <div class="small text-muted">{{ order.vendor.address or 'Address on file' }}</div>
+                        <div class="small mt-2"><i class="fas fa-phone me-1"></i> {{ order.vendor.phone }}</div>
+                        <div class="small"><i class="fas fa-envelope me-1"></i> {{ order.vendor.email }}</div>
+                        {% else %}
+                        <h5 class="fw-bold text-dark mb-1">Direct Purchase</h5>
+                        <div class="small text-muted">Cash / Market Purchase</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded border h-100">
+                        <label class="small text-uppercase fw-bold text-muted mb-2">Ship Broad To</label>
+                        <h5 class="fw-bold text-dark mb-1">{{ company.company_name or 'Gharana Gold' }}</h5>
+                        <div class="small text-muted">{{ company.company_address or 'Unit 12, Industrial Estate, MIDC,
+                            Navi Mumbai' }}</div>
+                        <div class="small mt-2"><strong>Status:</strong>
+                            {% if order.status == 'PENDING' %}
+                            <span class="badge bg-warning">PENDING RECEIPT</span>
+                            {% elif order.status == 'RECEIVED' %}
+                            <span class="badge bg-info text-dark">GOODS RECEIVED</span>
+                            {% elif order.status == 'BILLED' %}
+                            <span class="badge bg-primary">BILLED</span>
+                            {% elif order.status == 'PAID' %}
+                            <span class="badge bg-success">PAID / CLOSED</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ order.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Bar -->
+            <div class="row mb-4 no-print px-3">
+                <div
+                    class="col-12 p-3 bg-soft-primary rounded border border-primary d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-tasks me-2"></i>Workflow Assistant</h6>
+                        <p class="small text-muted mb-0">Follow the steps below to complete the procurement cycle</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if order.status == 'PENDING' %}
+                        <a href="{{ url_for('purchase.inward_receipt', id=order.id) }}"
+                            class="btn btn-warning btn-sm fw-bold">
+                            <i class="fas fa-truck-loading me-1"></i>STEP 4: Record Receipt (GRN)
+                        </a>
+                        {% elif order.status == 'RECEIVED' %}
+                        <a href="{{ url_for('purchase.record_bill', id=order.id) }}"
+                            class="btn btn-primary btn-sm fw-bold">
+                            <i class="fas fa-file-invoice-dollar me-1"></i>STEP 5: Record Vendor Bill
+                        </a>
+                        {% elif order.status == 'BILLED' %}
+                        {% if order.invoices %}
+                        <a href="{{ url_for('purchase.record_payment', invoice_id=order.invoices[0].id) }}"
+                            class="btn btn-success btn-sm fw-bold">
+                            <i class="fas fa-money-check-alt me-1"></i>STEP 6: Record Payment
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <table class="table table-bordered mb-4">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="35%">Item Description</th>
+                        <th class="text-center" width="10%">Ordered</th>
+                        <th class="text-center" width="10%">Received</th>
+                        <th class="text-end" width="15%">Unit Cost</th>
+                        <th class="text-end" width="15%">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td>
+                            <div class="fw-bold">{{ item.product.name }}</div>
+                            <div class="small text-muted">Code: {{ item.product.code }}</div>
+                        </td>
+                        <td class="text-center fw-bold">{{ item.quantity }}</td>
+                        <td class="text-center fw-bold">
+                            {% if item.received_quantity >= item.quantity %}
+                            <span class="text-success">{{ item.received_quantity }}</span>
+                            {% elif item.received_quantity > 0 %}
+                            <span class="text-warning">{{ item.received_quantity }}</span>
+                            {% else %}
+                            <span class="text-danger">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">₹{{ "{:,.2f}".format(item.price) }}</td>
+                        <td class="text-end fw-bold">₹{{ "{:,.2f}".format(item.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-light">
+                    <tr>
+                        <td colspan="5" class="text-end fw-bold">Total Amount</td>
+                        <td class="text-end fw-bold fs-5">₹{{ "{:,.2f}".format(order.grand_total) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Footer -->
+            <div class="row mt-5">
+                <div class="col-8">
+                    <label class="small fw-bold text-muted">Notes / Special Instructions</label>
+                    <p class="small text-muted border p-2 rounded bg-light">
+                        Authorized procurement. Please quote PO number on all correspondence and invoices.
+                    </p>
+                </div>
+                <div class="col-4 text-center mt-3">
+                    <div class="border-bottom border-dark mb-2" style="width: 80%; margin: 0 auto 5px;"></div>
+                    <div class="small fw-bold">Authorized Signature</div>
+                </div>
+            </div>
+
+            <div class="text-center small text-muted mt-5 pt-3 border-top">
+                Computer generated document. No signature required.
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

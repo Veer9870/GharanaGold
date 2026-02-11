@@ -1,26 +1,32 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from app.models import Supplier, Order, OrderItem, Product, Transaction
+from app.models import Vendor, Order, OrderItem, Product, Transaction, GRN, GRNItem, PurchaseInvoice, VendorPayment
 from app import db
 from app.decorators import role_required
 from datetime import datetime
 
 purchase_bp = Blueprint('purchase', __name__)
 
-# --- Supplier Routes ---
-@purchase_bp.route('/suppliers')
+# --- Vendor Routes ---
+@purchase_bp.route('/vendors')
 @login_required
 @role_required('super_admin', 'admin', 'manager')
-def suppliers():
-    suppliers = Supplier.query.all()
-    return render_template('purchase/suppliers.html', suppliers=suppliers, title='Supplier Management')
+def vendors():
+    vendors_list = Vendor.query.all()
+    from app.ai_engine import AIEngine
+    
+    # Pre-calculate reliability for each vendor
+    for vendor in vendors_list:
+        vendor.reliability_score = AIEngine.get_vendor_reliability(vendor.id)
+    
+    return render_template('purchase/vendors.html', vendors=vendors_list, title='Vendor Management')
 
-@purchase_bp.route('/suppliers/add', methods=['GET', 'POST'])
+@purchase_bp.route('/vendors/add', methods=['GET', 'POST'])
 @login_required
 @role_required('super_admin', 'admin', 'manager')
-def add_supplier():
+def add_vendor():
     if request.method == 'POST':
-        supplier = Supplier(
+        vendor = Vendor(
             name=request.form.get('name'),
             contact_person=request.form.get('contact_person'),
             phone=request.form.get('phone'),
@@ -29,33 +35,33 @@ def add_supplier():
             gstin=request.form.get('gstin')
         )
         try:
-            db.session.add(supplier)
+            db.session.add(vendor)
             db.session.commit()
-            flash('Supplier added successfully!', 'success')
-            return redirect(url_for('purchase.suppliers'))
+            flash('Vendor added successfully!', 'success')
+            return redirect(url_for('purchase.vendors'))
         except Exception as e:
-            flash(f'Error adding supplier: {str(e)}', 'danger')
-    return render_template('purchase/supplier_form.html', title='Add Supplier')
+            flash(f'Error adding vendor: {str(e)}', 'danger')
+    return render_template('purchase/vendor_form.html', title='Add Vendor')
 
-@purchase_bp.route('/suppliers/edit/<int:id>', methods=['GET', 'POST'])
+@purchase_bp.route('/vendors/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required('super_admin', 'admin', 'manager')
-def edit_supplier(id):
-    supplier = Supplier.query.get_or_404(id)
+def edit_vendor(id):
+    vendor = Vendor.query.get_or_404(id)
     if request.method == 'POST':
-        supplier.name = request.form.get('name')
-        supplier.contact_person = request.form.get('contact_person')
-        supplier.phone = request.form.get('phone')
-        supplier.email = request.form.get('email')
-        supplier.address = request.form.get('address')
-        supplier.gstin = request.form.get('gstin')
+        vendor.name = request.form.get('name')
+        vendor.contact_person = request.form.get('contact_person')
+        vendor.phone = request.form.get('phone')
+        vendor.email = request.form.get('email')
+        vendor.address = request.form.get('address')
+        vendor.gstin = request.form.get('gstin')
         try:
             db.session.commit()
-            flash('Supplier updated successfully!', 'success')
-            return redirect(url_for('purchase.suppliers'))
+            flash('Vendor updated successfully!', 'success')
+            return redirect(url_for('purchase.vendors'))
         except Exception as e:
-            flash(f'Error updating supplier: {str(e)}', 'danger')
-    return render_template('purchase/supplier_form.html', supplier=supplier, title='Edit Supplier')
+            flash(f'Error updating vendor: {str(e)}', 'danger')
+    return render_template('purchase/vendor_form.html', vendor=vendor, title='Edit Vendor')
 
 # --- Purchase Order Routes ---
 @purchase_bp.route('/purchase/orders')
@@ -63,89 +69,213 @@ def edit_supplier(id):
 @role_required('super_admin', 'admin', 'manager')
 def orders():
     orders = Order.query.filter_by(type='PURCHASE').order_by(Order.date.desc()).all()
-    return render_template('purchase/orders.html', orders=orders, title='Purchase Orders')
+    from app.ai_engine import AIEngine
+    procurement_insight = AIEngine.get_procurement_insights()
+    return render_template('purchase/orders.html', 
+                           orders=orders, 
+                           procurement_insight=procurement_insight,
+                           title='Purchase Orders')
 
 @purchase_bp.route('/purchase/new', methods=['GET', 'POST'])
 @login_required
 @role_required('super_admin', 'admin', 'manager')
 def create_order():
     if request.method == 'POST':
-        supplier_id = request.form.get('supplier_id')
+        vendor_id = request.form.get('vendor_id')
         
         # Create Order Header
         order = Order(
             type='PURCHASE',
-            supplier_id=supplier_id,
-            status='COMPLETED', # For simplicity, auto-complete. In real apps, usually PENDING -> GRN -> COMPLETED
+            vendor_id=vendor_id,
+            status='PENDING', # New flow: PO is Pending until Received
             date=datetime.utcnow()
         )
         db.session.add(order)
-        db.session.flush() # Get ID
+        db.session.flush()
         
         total_amount = 0
-        
-        # Handle Items (Assuming dynamic form with array inputs)
-        # In a real app, this would be JS-heavy. Here we assume one item for simplicity or use a loop if inputs are named properly.
-        # Let's support multiple items via list parsing
-        
-        product_ids = request.form.getlist('product_id[]')
+        product_names = request.form.getlist('product_name[]')
         quantities = request.form.getlist('quantity[]')
         prices = request.form.getlist('price[]')
         
-        for pid, qty, price in zip(product_ids, quantities, prices):
-            if pid and qty and price:
-                qty = int(qty)
-                price = float(price)
-                line_total = qty * price
-                
+        for name, qty, price in zip(product_names, quantities, prices):
+            if name and qty and price:
+                # Find or Create Product
+                product = Product.query.filter_by(name=name.strip()).first()
+                if not product:
+                    # Generate a simple unique code
+                    timestamp = datetime.now().strftime('%y%m%d%H%M%S')
+                    new_code = f"AUTO-{timestamp[-6:]}"
+                    
+                    product = Product(
+                        code=new_code,
+                        name=name.strip(),
+                        category='Raw Material', # Default for new purchases
+                        cost_price=float(price),
+                        stock_quantity=0,
+                        raw_stock=0
+                    )
+                    db.session.add(product)
+                    db.session.flush() # Get the auto-incremented ID
+
+                line_total = float(qty) * float(price)
                 item = OrderItem(
                     order_id=order.id,
-                    product_id=pid,
-                    quantity=qty,
-                    price=price,
+                    product_id=product.id,
+                    quantity=float(qty),
+                    price=float(price),
                     total=line_total
                 )
                 db.session.add(item)
                 total_amount += line_total
-                
-                # Update Stock
-                product = Product.query.get(pid)
-                product.stock_quantity += qty
-                # Update cost price to latest purchase price? Optional. 
-                # product.cost_price = price 
-                
-                # Log Transaction
-                txn = Transaction(
-                    product_id=pid,
-                    type='IN',
-                    quantity=qty,
-                    reference_model='Order',
-                    reference_id=order.id,
-                    description=f'Purchase from Supplier {supplier_id}'
-                )
-                db.session.add(txn)
 
         order.total_amount = total_amount
-        order.grand_total = total_amount # Tax logic can be added here
+        order.grand_total = total_amount
         
         try:
             db.session.commit()
-            
-            # Send Email Notification
-            try:
-                from app.email_service import EmailService
-                EmailService.send_purchase_order_confirmation(order, Supplier.query.get(supplier_id))
-            except Exception as email_error:
-                import traceback
-                print(f"Email notification failed: {email_error}")
-                traceback.print_exc()
-            
-            flash('Purchase Order created and Stock Updated! Email sent.', 'success')
-            return redirect(url_for('purchase.orders'))
+            flash('Purchase Order created successfully! Now record the receipt when goods arrive.', 'success')
+            return redirect(url_for('purchase.view_order', id=order.id))
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating order: {str(e)}', 'danger')
 
-    suppliers = Supplier.query.all()
+    vendors = Vendor.query.all()
     products = Product.query.all()
-    return render_template('purchase/create_order.html', suppliers=suppliers, products=products, title='New Purchase Order')
+    selected_vendor_id = request.args.get('vendor_id', type=int)
+    return render_template('purchase/create_order.html', 
+                           vendors=vendors, 
+                           products=products, 
+                           selected_vendor_id=selected_vendor_id,
+                           now=datetime.now().strftime('%d %b %Y'),
+                           title='New Purchase Order')
+
+@purchase_bp.route('/purchase/view/<int:id>')
+@login_required
+@role_required('super_admin', 'admin', 'manager', 'store_user') 
+def view_order(id):
+    order = Order.query.get_or_404(id)
+    if order.type != 'PURCHASE':
+        flash('Invalid order type.', 'danger')
+        return redirect(url_for('purchase.orders'))
+    return render_template('purchase/view_order.html', order=order, title=f'Purchase Order #{order.id}')
+
+# --- Goods Receipt (Inward Entry) ---
+@purchase_bp.route('/purchase/inward/<int:id>', methods=['GET', 'POST'])
+@login_required
+@role_required('super_admin', 'admin', 'manager', 'store_user')
+def inward_receipt(id):
+    order = Order.query.get_or_404(id)
+    if request.method == 'POST':
+        grn = GRN(
+            order_id=order.id,
+            grn_number=f"GRN-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            received_by=request.form.get('received_by'),
+            remarks=request.form.get('remarks')
+        )
+        db.session.add(grn)
+        db.session.flush()
+
+        product_ids = request.form.getlist('product_id[]')
+        quantities = request.form.getlist('quantity_received[]')
+        
+        for pid, qty_rec in zip(product_ids, quantities):
+            qty_rec = int(qty_rec)
+            if qty_rec > 0:
+                # Add GRN Item
+                grn_item = GRNItem(
+                    grn_id=grn.id,
+                    product_id=pid,
+                    quantity_received=qty_rec
+                )
+                db.session.add(grn_item)
+
+                # Update Order Item Status
+                order_item = OrderItem.query.filter_by(order_id=order.id, product_id=pid).first()
+                if order_item:
+                    order_item.received_quantity += qty_rec
+
+                # Update Inventory Stock
+                product = Product.query.get(pid)
+                if product.category == 'Raw Material':
+                    product.raw_stock += qty_rec
+                    desc = f'Raw Material Inward via GRN {grn.grn_number}'
+                else:
+                    product.stock_quantity += qty_rec
+                    desc = f'Finished Good Inward via GRN {grn.grn_number}'
+
+                # Log Transaction
+                txn = Transaction(
+                    product_id=pid,
+                    type='IN',
+                    quantity=qty_rec,
+                    reference_model='GRN',
+                    reference_id=grn.id,
+                    description=desc
+                )
+                db.session.add(txn)
+
+        order.status = 'RECEIVED'
+        try:
+            db.session.commit()
+            flash(f'Goods Receipt Note {grn.grn_number} created and Stock Updated!', 'success')
+            return redirect(url_for('purchase.view_order', id=order.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error recording receipt: {str(e)}', 'danger')
+
+    return render_template('purchase/inward_form.html', order=order, title='Record Goods Receipt')
+
+# --- Vendor Bill / Purchase Invoice ---
+@purchase_bp.route('/purchase/bill/<int:id>', methods=['GET', 'POST'])
+@login_required
+@role_required('super_admin', 'admin', 'manager')
+def record_bill(id):
+    order = Order.query.get_or_404(id)
+    if request.method == 'POST':
+        bill = PurchaseInvoice(
+            order_id=order.id,
+            vendor_id=order.vendor_id,
+            invoice_number=request.form.get('invoice_number'),
+            invoice_date=datetime.strptime(request.form.get('invoice_date'), '%Y-%m-%d').date(),
+            total_amount=request.form.get('total_amount'),
+            status='UNPAID'
+        )
+        order.status = 'BILLED'
+        try:
+            db.session.add(bill)
+            db.session.commit()
+            flash('Vendor Bill recorded successfully!', 'success')
+            return redirect(url_for('purchase.view_order', id=order.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error recording bill: {str(e)}', 'danger')
+            
+    return render_template('purchase/bill_form.html', order=order, title='Record Vendor Bill')
+
+# --- Vendor Payment ---
+@purchase_bp.route('/purchase/payment/<int:invoice_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('super_admin', 'admin', 'manager')
+def record_payment(invoice_id):
+    invoice = PurchaseInvoice.query.get_or_404(invoice_id)
+    if request.method == 'POST':
+        payment = VendorPayment(
+            invoice_id=invoice.id,
+            amount=request.form.get('amount'),
+            payment_mode=request.form.get('payment_mode'),
+            transaction_id=request.form.get('transaction_id'),
+            remarks=request.form.get('remarks')
+        )
+        invoice.status = 'PAID' # For simplicity, mark full paid. Partial logic could be added.
+        invoice.order.status = 'PAID'
+        try:
+            db.session.add(payment)
+            db.session.commit()
+            flash('Payment recorded successfully!', 'success')
+            return redirect(url_for('purchase.view_order', id=invoice.order_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error recording payment: {str(e)}', 'danger')
+            
+    return render_template('purchase/payment_form.html', invoice=invoice, title='Record Payment')

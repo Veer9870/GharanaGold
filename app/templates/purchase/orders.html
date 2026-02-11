@@ -1,39 +1,203 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Purchase Orders</h1>
-    <a href="{{ url_for('purchase.create_order') }}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus"></i> New PO
-    </a>
+<!-- Supply Chain Status -->
+<div class="ai-status-bar mb-4 px-4 py-2 rounded-pill shadow-sm d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="supply-pulse me-3"></div>
+        <span class="small fw-bold text-uppercase tracking-wider">Supply Chain Monitor: <span
+                class="text-success">Active & Syncing</span></span>
+    </div>
+    <div class="small d-none d-md-block text-muted">
+        <i class="fas fa-satellite-dish me-1"></i> Tracking {{ orders|length }} inbound shipments from registered
+        vendors
+    </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<!-- Visual Workflow Guide -->
+<div class="procurement-stepper mb-5">
+    <div class="row text-center g-0">
+        <div class="col">
+            <div class="step-item active">
+                <div class="step-icon"><i class="fas fa-file-signature"></i></div>
+                <div class="step-label">1. Create PO</div>
+                <div class="step-desc">Pending Arrival</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="step-connector"></div>
+        </div>
+        <div class="col">
+            <div class="step-item">
+                <div class="step-icon"><i class="fas fa-truck-loading"></i></div>
+                <div class="step-label">2. Record GRN</div>
+                <div class="step-desc">Goods Arrived</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="step-connector"></div>
+        </div>
+        <div class="col">
+            <div class="step-item">
+                <div class="step-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="step-label">3. Vendor Bill</div>
+                <div class="step-desc">Invoice Received</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="step-connector"></div>
+        </div>
+        <div class="col">
+            <div class="step-item">
+                <div class="step-icon"><i class="fas fa-check-double"></i></div>
+                <div class="step-label">4. Payment</div>
+                <div class="step-desc">PO Closed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold d-flex align-items-center">
+            Procurement Ledger
+            <span class="badge bg-soft-primary text-primary fs-small ms-3 border border-primary px-3">Sync Active</span>
+        </h2>
+        <p class="text-muted mb-0">Global supply chain logistics for Gharana Gold assets</p>
+    </div>
+    <div class="dashboard-actions">
+        <div class="btn-group me-2">
+            <button class="btn btn-outline-secondary btn-sm border-0 dropdown-toggle" data-bs-toggle="dropdown">
+                Filter Status
+            </button>
+            <ul class="dropdown-menu shadow-lg border-0">
+                <li><a class="dropdown-item small" href="#">Pending Arrivals</a></li>
+                <li><a class="dropdown-item small" href="#">Completed Cycles</a></li>
+            </ul>
+        </div>
+        <a href="{{ url_for('purchase.create_order') }}" class="btn btn-primary shadow-sm px-4">
+            <i class="fas fa-plus-circle me-2"></i>Initialize PO
+        </a>
+    </div>
+</div>
+
+<!-- Procurement Insights -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm glass-card p-4">
+            <div class="d-flex align-items-center mb-2">
+                <div class="bg-soft-primary text-primary rounded-circle p-2 me-3"><i class="fas fa-truck-loading"></i>
+                </div>
+                <h6 class="mb-0 fw-bold">Active Logistics</h6>
+            </div>
+            {% set active_count = orders|selectattr('status', 'equalto', 'PENDING')|list|length %}
+            <h3 class="fw-bold mb-1">{{ active_count }}</h3>
+            <p class="text-xs text-muted mb-0">Transactions currently in transit or awaiting verification</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm glass-card p-4">
+            <div class="d-flex align-items-center mb-2">
+                <div class="bg-soft-success text-success rounded-circle p-2 me-3"><i class="fas fa-calendar-check"></i>
+                </div>
+                <h6 class="mb-0 fw-bold">MTD Volume</h6>
+            </div>
+            <h3 class="fw-bold mb-1">₹{{ "{:,.0f}".format(orders|sum(attribute='total_amount')) }}</h3>
+            <p class="text-xs text-muted mb-0">Total procurement throughput for the current cycle</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm glass-card p-4 bg-dark text-white border-start border-primary border-5">
+            <div class="d-flex align-items-center mb-2">
+                <div class="bg-primary text-white rounded-circle p-2 me-3"
+                    style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><i
+                        class="fas fa-robot small"></i></div>
+                <h6 class="mb-0 fw-bold">AI Insight</h6>
+            </div>
+            <p class="text-xs mb-0 opacity-75">{{ procurement_insight|safe }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden dash-card-glow mb-5">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
                     <tr>
-                        <th>PO ID</th>
-                        <th>Date</th>
-                        <th>Supplier</th>
-                        <th>Status</th>
-                        <th>Total Amount</th>
-                        <th>Action</th>
+                        <th class="ps-4 py-3">Order Token</th>
+                        <th class="py-3">Timestamp</th>
+                        <th class="py-3">Vendor Source</th>
+                        <th class="py-3">Fulfillment</th>
+                        <th class="py-3">Total Asset Value</th>
+                        <th class="pe-4 py-3 text-end">Control</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for order in orders %}
-                    <tr>
-                        <td>#PO-{{ order.id }}</td>
-                        <td>{{ order.date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ order.supplier.name if order.supplier else 'N/A' }}</td>
-                        <td>
-                            <span class="badge bg-success">{{ order.status }}</span>
+                    <tr class="transition-all hover-row">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-soft-primary text-primary rounded-3 px-2 py-1 small fw-bold me-3">#PO-{{
+                                    order.id }}</div>
+                                <div class="small text-muted d-none d-lg-block">Ref: TR-{{ "10000"|int + order.id }}
+                                </div>
+                            </div>
                         </td>
-                        <td>{{ order.total_amount }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-info">View</button>
+                            <div class="small fw-bold text-dark">{{ order.date.strftime('%d %b %Y') }}</div>
+                            <div class="text-xs text-muted">{{ order.date.strftime('%I:%M %p') }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ order.vendor.name if order.vendor else 'D' }}&background=f8f9fc&color=4e73df&size=30"
+                                    class="rounded-circle me-2 border" alt="V">
+                                <div class="fw-bold small text-dark">{{ order.vendor.name if order.vendor else
+                                    'Direct Acquisition' }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if order.status == 'PENDING' %}
+                            <span
+                                class="badge bg-soft-warning text-warning px-3 py-2 rounded-pill fw-normal pulse-element">
+                                <i class="fas fa-clock me-1 small"></i>Pending Arrival
+                            </span>
+                            {% elif order.status == 'RECEIVED' %}
+                            <span class="badge bg-soft-info text-info px-3 py-2 rounded-pill fw-normal">
+                                <i class="fas fa-truck-loading me-1 small"></i>Arrived
+                            </span>
+                            {% elif order.status == 'BILLED' %}
+                            <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-normal">
+                                <i class="fas fa-file-invoice-dollar me-1 small"></i>Billed
+                            </span>
+                            {% elif order.status == 'PAID' %}
+                            <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill fw-normal">
+                                <i class="fas fa-check-circle me-1 small"></i>Paid & Closed
+                            </span>
+                            {% else %}
+                            <span class="badge bg-soft-secondary text-secondary px-3 py-2 rounded-pill fw-normal">
+                                {{ order.status }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">₹{{ "{:,.2f}".format(order.total_amount or 0) }}</div>
+                            <div class="text-xs text-muted">Incl. Assets & Tax</div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <a href="{{ url_for('purchase.view_order', id=order.id) }}"
+                                class="btn btn-sm btn-light border-0 ripple rounded-pill px-3 shadow-xs">
+                                <i class="fas fa-eye me-1 small"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="fas fa-box-open fa-3x text-muted mb-3 opacity-25"></i>
+                                <h6 class="text-muted">No procurement cycles detected in modern history.</h6>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -42,4 +206,156 @@
         </div>
     </div>
 </div>
+
+<style>
+    .ai-status-bar {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(78, 115, 223, 0.2);
+    }
+
+    .supply-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #1cc88a;
+        box-shadow: 0 0 0 rgba(28, 200, 138, 0.4);
+        animation: supplyPulse 2s infinite;
+    }
+
+    @keyframes supplyPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(28, 200, 138, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(28, 200, 138, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(28, 200, 138, 0);
+        }
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        transition: transform 0.3s;
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .bg-soft-success {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(246, 194, 62, 0.1);
+    }
+
+    .bg-soft-secondary {
+        background-color: rgba(133, 135, 150, 0.1);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .fs-small {
+        font-size: 0.7rem;
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.1em;
+    }
+
+    .hover-row:hover {
+        background-color: #f8f9fc !important;
+    }
+
+    .dash-card-glow {
+        transition: box-shadow 0.3s;
+    }
+
+    .dash-card-glow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.1) !important;
+    }
+
+    .procurement-stepper {
+        background: white;
+        padding: 2rem;
+        border-radius: 1.5rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.05);
+    }
+
+    .step-item {
+        position: relative;
+        z-index: 2;
+    }
+
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        background: #f8f9fc;
+        border: 2px solid #e3e6f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        color: #b7b9cc;
+        transition: all 0.3s ease;
+    }
+
+    .step-item.active .step-icon {
+        background: #4e73df;
+        color: white;
+        border-color: #4e73df;
+        box-shadow: 0 0 15px rgba(78, 115, 223, 0.4);
+    }
+
+    .step-label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #5a5c69;
+    }
+
+    .step-desc {
+        font-size: 0.75rem;
+        color: #b7b9cc;
+    }
+
+    .step-connector {
+        height: 2px;
+        background: #e3e6f0;
+        margin-top: 25px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .pulse-element {
+        animation: status-pulse 1.5s infinite;
+    }
+
+    @keyframes status-pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+</style>
 {% endblock %}

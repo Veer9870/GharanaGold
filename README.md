@@ -26,7 +26,8 @@ A complete, production-ready ERP system built with Flask, MySQL/SQLite, and Boot
 - Warehouse location management
 
 ### 🛒 Purchase Module
-- Supplier Master (Contact, GSTIN)
+### 🛒 Purchase Module
+- Vendor Master (Contact, GSTIN)
 - Purchase Order creation
 - Automatic stock increment on purchase
 - Purchase history tracking
@@ -164,7 +165,7 @@ Visit: `http://127.0.0.1:5000`
 
 ### Creating Purchase Order
 1. Go to **Purchase** → **New PO**
-2. Select Supplier
+2. Select Vendor
 3. Add items with quantity and cost
 4. Submit → Stock automatically increases
 
@@ -251,7 +252,7 @@ sudo systemctl start erp
 - **users**: Authentication & roles
 - **settings**: System configuration
 - **products**: Inventory master
-- **suppliers**: Supplier directory
+- **vendors**: Vendor directory
 - **customers**: Customer directory
 - **orders**: Purchase & Sales orders
 - **order_items**: Order line items

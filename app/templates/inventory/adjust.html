@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Stock Adjustment</h2>
+        <p class="text-muted mb-0">Manually adjust stock for <strong>{{ product.name }}</strong></p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('inventory.view_product', id=product.id) }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Product
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-6">
+        <!-- Current Stock Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body text-center py-4">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="bg-primary-soft rounded-circle p-3 me-3">
+                        <i class="fas fa-box fa-2x text-primary"></i>
+                    </div>
+                    <div class="text-start">
+                        <h5 class="mb-0 fw-bold">{{ product.name }}</h5>
+                        <code class="text-muted">{{ product.code }}</code>
+                    </div>
+                </div>
+                <hr>
+                <div
+                    class="display-4 fw-bold mb-2 {% if product.stock_quantity <= product.min_stock_alert %}text-warning{% else %}text-success{% endif %}">
+                    {{ product.stock_quantity }}
+                </div>
+                <p class="text-muted mb-0">Current Stock ({{ product.unit }})</p>
+            </div>
+        </div>
+
+        <!-- Adjustment Form -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-balance-scale text-primary me-2"></i>Make Adjustment</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <!-- Adjustment Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Adjustment Type</label>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="adjustment_type" id="type_add" value="add"
+                                    checked>
+                                <label class="btn btn-outline-success w-100 py-3" for="type_add">
+                                    <i class="fas fa-plus-circle fa-2x mb-2 d-block"></i>
+                                    Add Stock
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="adjustment_type" id="type_remove"
+                                    value="remove">
+                                <label class="btn btn-outline-danger w-100 py-3" for="type_remove">
+                                    <i class="fas fa-minus-circle fa-2x mb-2 d-block"></i>
+                                    Remove Stock
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Quantity ({{ product.unit }})</label>
+                        <input type="number" class="form-control form-control-lg text-center" name="quantity" min="1"
+                            value="1" required placeholder="Enter quantity">
+                        <div class="form-text" id="stock-preview">
+                            New stock will be: <strong id="new-stock">{{ product.stock_quantity + 1 }}</strong> {{
+                            product.unit }}
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Reason for Adjustment</label>
+                        <select class="form-select mb-2" id="reason-select" onchange="updateReason()">
+                            <option value="">-- Select a reason --</option>
+                            <option value="Physical Count Correction">Physical Count Correction</option>
+                            <option value="Damaged/Expired Stock">Damaged/Expired Stock</option>
+                            <option value="Stock Transfer">Stock Transfer</option>
+                            <option value="Return Processing">Return Processing</option>
+                            <option value="Sample/Demo">Sample/Demo</option>
+                            <option value="System Error Correction">System Error Correction</option>
+                            <option value="custom">Custom Reason...</option>
+                        </select>
+                        <textarea class="form-control" name="reason" id="reason-input" rows="2"
+                            placeholder="Describe the reason for this adjustment..."></textarea>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg py-3">
+                            <i class="fas fa-check-circle me-2"></i>Confirm Adjustment
+                        </button>
+                        <a href="{{ url_for('inventory.view_product', id=product.id) }}"
+                            class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-primary-soft {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .btn-check:checked+.btn-outline-success {
+        background-color: #1cc88a;
+        color: white;
+    }
+
+    .btn-check:checked+.btn-outline-danger {
+        background-color: #e74a3b;
+        color: white;
+    }
+</style>
+
+<script>
+    const currentStock = parseInt('{{ product.stock_quantity or 0 }}');
+    const quantityInput = document.querySelector('input[name="quantity"]');
+    const typeAdd = document.getElementById('type_add');
+    const typeRemove = document.getElementById('type_remove');
+    const newStockEl = document.getElementById('new-stock');
+
+    function updatePreview() {
+        const qty = parseInt(quantityInput.value) || 0;
+        const isAdd = typeAdd.checked;
+        const newStock = isAdd ? currentStock + qty : currentStock - qty;
+
+        newStockEl.textContent = Math.max(0, newStock);
+
+        if (newStock < 0) {
+            newStockEl.classList.add('text-danger');
+        } else {
+            newStockEl.classList.remove('text-danger');
+        }
+    }
+
+    function updateReason() {
+        const select = document.getElementById('reason-select');
+        const input = document.getElementById('reason-input');
+
+        if (select.value === 'custom') {
+            input.value = '';
+            input.focus();
+        } else {
+            input.value = select.value;
+        }
+    }
+
+    quantityInput.addEventListener('input', updatePreview);
+    typeAdd.addEventListener('change', updatePreview);
+    typeRemove.addEventListener('change', updatePreview);
+</script>
+{% endblock %}

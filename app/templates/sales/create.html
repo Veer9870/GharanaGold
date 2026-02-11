@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Record Asset Dispatch</h2>
+        <p class="text-muted mb-0">Initialize an outward sale and adjust global inventory balances</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <form method="POST" id="salesForm">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-user-tag text-primary me-2"></i>Acquiring Entity
+                        Information</h6>
+                </div>
+                <div class="card-body p-4 bg-gradient-light">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Select Customer /
+                                Client</label>
+                            <select name="customer_id" class="form-select border-0 shadow-xs p-3 rounded-3">
+                                <option value="">Common / Direct Sale (No Registration)</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.phone }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <a href="{{ url_for('sales.add_customer') }}"
+                                class="btn btn-outline-primary w-100 p-3 rounded-3 border-0 bg-white shadow-xs">
+                                <i class="fas fa-user-plus me-2"></i>Quick Register
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list-check text-success me-2"></i>Dispatched Asset
+                        Manifest</h6>
+                    <button type="button" class="btn btn-sm btn-soft-primary" onclick="addItemRow()">
+                        <i class="fas fa-plus me-1"></i>Add Entry
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0" id="manifestTable">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Asset SKU</th>
+                                <th>Volume</th>
+                                <th>Unit Profit/Price (₹)</th>
+                                <th>Row Value</th>
+                                <th class="pe-4 text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="item-row">
+                                <td class="ps-4" style="width: 40%;">
+                                    <select name="product_id[]" class="form-select border-0 shadow-none product-select"
+                                        required onchange="updateProductPrice(this)">
+                                        <option value="" disabled selected>Select SKU...</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.id }}" data-price="{{ product.selling_price }}"
+                                            data-stock="{{ product.stock_quantity }}">
+                                            {{ product.name }} (In Stock: {{ product.stock_quantity }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="quantity[]"
+                                        class="form-control border-0 shadow-none qty-input" value="1" min="1" required
+                                        onchange="calculateRow(this)">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="price[]"
+                                        class="form-control border-0 shadow-none price-input" placeholder="0.00"
+                                        required onchange="calculateRow(this)">
+                                </td>
+                                <td>
+                                    <div class="row-total fw-bold text-dark">₹0.00</div>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button type="button" class="btn btn-sm text-danger opacity-25"
+                                        onclick="removeRow(this)">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-dark text-white">
+                            <tr>
+                                <td colspan="3" class="ps-4 py-3 fw-bold">Aggregate Fulfillment Value</td>
+                                <td colspan="2" class="pe-4 py-3 text-end">
+                                    <h4 class="mb-0 fw-bold" id="grandTotal">₹0.00</h4>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="card-footer bg-white p-4 text-end">
+                    <a href="{{ url_for('sales.index') }}" class="btn btn-light px-4 me-2">Discard</a>
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm">
+                        <i class="fas fa-cloud-bolt me-2"></i>Apply Dispatch & Adjust Stock
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function addItemRow() {
+        const tbody = document.querySelector('#manifestTable tbody');
+        const firstRow = tbody.querySelector('.item-row');
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelector('.qty-input').value = 1;
+        newRow.querySelector('.price-input').value = '';
+        newRow.querySelector('.row-total').textContent = '₹0.00';
+        tbody.appendChild(newRow);
+    }
+
+    function removeRow(btn) {
+        const rows = document.querySelectorAll('.item-row');
+        if (rows.length > 1) {
+            btn.closest('tr').remove();
+            calculateGrandTotal();
+        }
+    }
+
+    function updateProductPrice(select) {
+        const selectedOption = select.options[select.selectedIndex];
+        const price = selectedOption.dataset.price;
+        const row = select.closest('tr');
+        row.querySelector('.price-input').value = price;
+        calculateRow(row.querySelector('.qty-input'));
+    }
+
+    function calculateRow(input) {
+        const row = input.closest('tr');
+        const qty = row.querySelector('.qty-input').value || 0;
+        const price = row.querySelector('.price-input').value || 0;
+        const total = qty * price;
+        row.querySelector('.row-total').textContent = '₹' + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
+        calculateGrandTotal();
+    }
+
+    function calculateGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const qty = row.querySelector('.qty-input').value || 0;
+            const price = row.querySelector('.price-input').value || 0;
+            grandTotal += (qty * price);
+        });
+        document.getElementById('grandTotal').textContent = '₹' + grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 });
+    }
+</script>
+
+<style>
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+    }
+
+    .btn-soft-primary {
+        background: rgba(78, 115, 223, 0.1);
+        color: #4e73df;
+        font-weight: 600;
+    }
+
+    .form-select,
+    .form-control {
+        background: transparent !important;
+    }
+</style>
+{% endblock %}

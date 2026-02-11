@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold"><i class="fas fa-money-check-alt me-2 text-success"></i>Record Vendor Payment</h2>
+        <p class="text-muted mb-0">Step 6: Finalize payment for {{ invoice.vendor.name }} / Bill #{{
+            invoice.invoice_number }}</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('purchase.view_order', id=invoice.order_id) }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to PO
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="mb-0 fw-bold">Payment Entry</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <div
+                                class="p-3 bg-light rounded border border-success d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="mb-1 text-muted">Outstanding Balance</h6>
+                                    <h3 class="fw-bold mb-0 text-success">₹{{ "{:,.2f}".format(invoice.total_amount) }}
+                                    </h3>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-danger rounded-pill px-3">PENDING PAYMENT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Payment Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-success text-white border-0">₹</span>
+                                <input type="number" step="0.01" class="form-control border-success" name="amount"
+                                    value="{{ invoice.total_amount }}" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Payment Mode</label>
+                            <select class="form-select" name="payment_mode" required>
+                                <option value="UPI">UPI (GPay/PhonePe)</option>
+                                <option value="Bank Transfer">Bank Transfer (NEFT/RTGS)</option>
+                                <option value="Check">Check</option>
+                                <option value="Cash">Cash</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">Transaction ID / Reference</label>
+                            <input type="text" class="form-control" name="transaction_id"
+                                placeholder="Ex: T202612345678" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-600">Internal Remarks</label>
+                            <textarea class="form-control" name="remarks" rows="2"
+                                placeholder="Ex: Paid via GPay business account."></textarea>
+                        </div>
+
+                        <div class="col-12 mt-4 pt-3 border-top text-end">
+                            <button type="submit" class="btn btn-success px-5 py-2 shadow-sm rounded-pill">
+                                <i class="fas fa-receipt me-2"></i>CONFIRM PAYMENT & CLOSE PO
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-600 {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+</style>
+{% endblock %}

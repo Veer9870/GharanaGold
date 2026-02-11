@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Register Global Partner</h2>
+        <p class="text-muted mb-0">Onboard a new customer or distribution entity into the database</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <div class="bg-soft-primary p-2 rounded me-3">
+                    <i class="fas fa-user-plus text-primary"></i>
+                </div>
+                <h5 class="mb-0 fw-bold">Partner Identity Protocol</h5>
+            </div>
+            <div class="card-body p-4 bg-gradient-light">
+                <form method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Legal Entity Name</label>
+                            <input type="text" class="form-control p-3 border-0 shadow-xs" name="name"
+                                placeholder="Full Name or Business Title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Primary Communication
+                                (Phone)</label>
+                            <input type="text" class="form-control p-3 border-0 shadow-xs" name="phone"
+                                placeholder="+91-00000-00000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Authorized Email
+                                Sink</label>
+                            <input type="email" class="form-control p-3 border-0 shadow-xs" name="email"
+                                placeholder="official@client.com">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Fiscal Compliance
+                                (GSTIN)</label>
+                            <input type="text" class="form-control p-3 border-0 shadow-xs" name="gstin"
+                                placeholder="Ex: 07AAAAA0000A1Z5">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Distribution Hub
+                                Address</label>
+                            <textarea class="form-control p-3 border-0 shadow-xs" name="address" rows="3"
+                                placeholder="Full physical location for dispatches..."></textarea>
+                        </div>
+                        <div class="col-md-12 mt-5 text-center">
+                            <a href="{{ url_for('sales.customers') }}" class="btn btn-light px-4 me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-5 py-3 rounded-pill shadow-lg fw-bold">
+                                <i class="fas fa-check-circle me-2"></i>Provision Account Identity
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+    }
+
+    .shadow-xs {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}

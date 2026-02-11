@@ -1,57 +1,248 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Inventory Management</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{{ url_for('inventory.add_product') }}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Add New Product
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info-soft text-info">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="text-muted small text-uppercase">Raw Base</div>
+                        <div class="fw-bold fs-4">{{ stats.raw_materials }} SKU</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success-soft text-success">
+                        <i class="fas fa-indian-rupee-sign"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="text-muted small text-uppercase">Finished Value</div>
+                        <div class="fw-bold fs-5">₹{{ "{:,.0f}".format(stats.saleable_value) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-warning-soft text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="text-muted small text-uppercase">Low Stock</div>
+                        <div class="fw-bold fs-4">{{ stats.low_stock }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-danger-soft text-danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="text-muted small text-uppercase">Out of Stock</div>
+                        <div class="fw-bold fs-4">{{ stats.out_of_stock }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+        <div class="card border-0 shadow-sm h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info-soft text-info">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="text-muted small text-uppercase">Expiring</div>
+                        <div class="fw-bold fs-4">{{ stats.expiring_soon }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6">
+        <a href="{{ url_for('inventory.dashboard') }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 stat-card bg-gradient-primary text-white">
+                <div class="card-body d-flex align-items-center justify-content-center text-center">
+                    <div>
+                        <i class="fas fa-chart-line mb-1"></i><br>
+                        <span class="fw-bold small">Analytics</span>
+                    </div>
+                </div>
+            </div>
         </a>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Gharana Gold Global Catalog</h2>
+        <p class="text-muted mb-0">AI-optimized stock monitoring & SKU registration</p>
+    </div>
+    <div class="dashboard-actions d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('inventory.alerts') }}" class="btn btn-outline-warning shadow-sm">
+            <i class="fas fa-bell me-2"></i>Alerts
+        </a>
+        <a href="{{ url_for('inventory.stock_history') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-history me-2"></i>History
+        </a>
+        <a href="{{ url_for('inventory.add_product') }}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-plus me-2"></i>Add Product
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted fw-bold">Search Products</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i
+                            class="fas fa-search text-muted small"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" name="search" value="{{ search }}"
+                        placeholder="Name, code, or brand...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted fw-bold">Category</label>
+                <select class="form-select" name="category">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category==cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted fw-bold">Stock Status</label>
+                <select class="form-select" name="stock_filter">
+                    <option value="">All Products</option>
+                    <option value="low" {% if stock_filter=='low' %}selected{% endif %}>Low Stock</option>
+                    <option value="out" {% if stock_filter=='out' %}selected{% endif %}>Out of Stock</option>
+                    <option value="healthy" {% if stock_filter=='healthy' %}selected{% endif %}>Healthy Stock</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden dash-card-glow">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0" id="inventoryTable">
+                <thead class="bg-light text-muted small text-uppercase">
                     <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Stock</th>
-                        <th>Unit</th>
-                        <th>Cost</th>
-                        <th>Selling</th>
-                        <th>Location</th>
-                        <th>Actions</th>
+                        <th class="ps-4 py-3">Product Identity</th>
+                        <th class="py-3">Category</th>
+                        <th class="py-3">Current Stock</th>
+                        <th class="py-3 text-center">Price / Unit</th>
+                        <th class="py-3">AI Health</th>
+                        <th class="py-3">Location</th>
+                        <th class="pe-4 py-3 text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for product in products %}
-                    <tr class="{% if product.stock_quantity <= product.min_stock_alert %}table-danger{% endif %}">
-                        <td>{{ product.code }}</td>
-                        <td>{{ product.name }}</td>
-                        <td>{{ product.category }}</td>
+                    <tr class="transition-all" id="product-row-{{ product.id }}">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-soft-primary rounded-circle p-2 me-3 text-primary d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px;">
+                                    <i class="fas fa-boxes-packing small"></i>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('inventory.view_product', id=product.id) }}"
+                                        class="fw-bold text-dark text-decoration-none hover-primary">
+                                        {{ product.name }}
+                                    </a>
+                                    <div>
+                                        <code class="text-xs text-muted">{{ product.code }}</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                         <td>
-                            <strong>{{ product.stock_quantity }}</strong>
-                            {% if product.stock_quantity <= product.min_stock_alert %} <i
-                                class="fas fa-exclamation-triangle text-danger small" title="Low Stock"></i>
+                            <span class="badge rounded-pill bg-soft-secondary text-secondary px-3 py-2">
+                                {{ product.category or 'Commodity' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3" style="min-width: 80px;">
+                                    {% if product.category == 'Raw Material' %}
+                                    <div class="small fw-bold mb-1 text-info">
+                                        <i class="fas fa-seedling me-1"></i>Raw: {{ product.raw_stock }} {{ product.unit
+                                        }}
+                                    </div>
+                                    <div class="text-xs text-muted">Awaiting Production</div>
+                                    {% else %}
+                                    <div class="small fw-bold mb-1 text-success">
+                                        <i class="fas fa-check-circle me-1"></i>Saleable: {{ product.stock_quantity }}
+                                        {{ product.unit }}
+                                    </div>
+                                    <div class="progress" style="height: 5px; width: 80px;">
+                                        {% set stock_ratio = (product.stock_quantity / (product.min_stock_alert * 10 if
+                                        product.min_stock_alert > 0 else 100)) * 100 %}
+                                        {% set display_width = [stock_ratio, 100]|min %}
+                                        <div class="progress-bar {% if product.stock_quantity <= product.min_stock_alert %}bg-danger{% elif product.stock_quantity <= product.min_stock_alert * 2 %}bg-warning{% else %}bg-success{% endif %}"
+                                            style="--p-width: {{ display_width }}%;"></div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="small text-muted">Cost: ₹{{ "{:,.2f}".format(product.cost_price or 0) }}</div>
+                            <div class="fw-bold text-success">Sell: ₹{{ "{:,.2f}".format(product.selling_price or 0) }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if product.category != 'Raw Material' %}
+                            {% if product.stock_quantity == 0 %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                            {% elif product.stock_quantity <= product.min_stock_alert %} <span
+                                class="badge bg-warning text-dark">Low Stock</span>
+                                {% else %}
+                                <span class="badge bg-success">Healthy</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="badge bg-info text-dark">Material</span>
                                 {% endif %}
                         </td>
-                        <td>{{ product.unit }}</td>
-                        <td>{{ product.cost_price }}</td>
-                        <td>{{ product.selling_price }}</td>
-                        <td>{{ product.warehouse_location }}</td>
                         <td>
-                            <a href="{{ url_for('inventory.edit_product', id=product.id) }}"
-                                class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{{ url_for('inventory.delete_product', id=product.id) }}"
-                                class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <span class="text-muted small">{{ product.warehouse_location or '--' }}</span>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="btn-group">
+                                <a href="{{ url_for('inventory.view_product', id=product.id) }}"
+                                    class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                                <a href="{{ url_for('inventory.edit_product', id=product.id) }}"
+                                    class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -60,4 +251,64 @@
         </div>
     </div>
 </div>
+
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .bg-info-soft {
+        background-color: rgba(54, 185, 204, 0.1);
+    }
+
+    .bg-success-soft {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(246, 194, 62, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(231, 74, 59, 0.1);
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .bg-soft-secondary {
+        background-color: rgba(133, 135, 150, 0.1);
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .dash-card-glow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(78, 115, 223, 0.15) !important;
+    }
+
+    .progress-bar {
+        width: var(--p-width, 0%);
+    }
+</style>
 {% endblock %}

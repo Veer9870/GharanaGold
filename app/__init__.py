@@ -33,8 +33,15 @@ def create_app(config_name='default'):
     from app.blueprints.sales import sales_bp
     app.register_blueprint(sales_bp)
 
+
     from app.blueprints.reports import reports_bp
     app.register_blueprint(reports_bp)
+
+    from app.blueprints.settings import settings_bp
+    app.register_blueprint(settings_bp)
+
+    from app.blueprints.manufacturing import manufacturing_bp
+    app.register_blueprint(manufacturing_bp)
     
     # Import models so they are registered
     with app.app_context():

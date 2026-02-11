@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">Provision New Account</h2>
+        <p class="text-muted mb-0">Create new user credentials for system access</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('auth.users') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Users
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-6 col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <div class="bg-soft-primary p-2 rounded me-3">
+                    <i class="fas fa-user-plus text-primary"></i>
+                </div>
+                <h5 class="mb-0 fw-bold">New User Details</h5>
+            </div>
+            <div class="card-body p-4 bg-gradient-light">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Username</label>
+                        <input type="text" class="form-control p-3 border-0 shadow-xs" name="username"
+                            placeholder="jdoe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Email Address</label>
+                        <input type="email" class="form-control p-3 border-0 shadow-xs" name="email"
+                            placeholder="email@company.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Password</label>
+                        <input type="password" class="form-control p-3 border-0 shadow-xs" name="password"
+                            placeholder="••••••••" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Role Access</label>
+                        <select class="form-select p-3 border-0 shadow-xs" name="role" required>
+                            <option value="store_user">Store User (Basic Access)</option>
+                            <option value="manager">Manager (Full Access + Reports)</option>
+                            <option value="admin">Admin (System Config)</option>
+                            <option value="super_admin">Super Admin (All Permissions)</option>
+                        </select>
+                    </div>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary py-3 fw-bold rounded-pill shadow-lg">
+                            <i class="fas fa-check-circle me-2"></i>Provision Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+    }
+
+    .shadow-xs {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+</style>
+{% endblock %}

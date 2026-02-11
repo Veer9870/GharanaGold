@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">{{ 'Update Vendor' if vendor else 'Onboard New Vendor' }}</h2>
+        <p class="text-muted mb-0">Manage procurement relationships for spice sourcing</p>
+    </div>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('purchase.vendors') }}" class="btn btn-outline-secondary shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Partners
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-primary">Vendor Profile</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <label class="form-label fw-600">Company / Trade Name</label>
+                            <input type="text" class="form-control" name="name"
+                                value="{{ vendor.name if vendor else '' }}" placeholder="Ex: Himalayan Spice Farms Ltd."
+                                required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-600">Contact Person Name</label>
+                            <input type="text" class="form-control" name="contact_person"
+                                value="{{ vendor.contact_person if vendor else '' }}" placeholder="Ex: Rahul Sharma">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Primary Phone Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i
+                                        class="fas fa-phone text-muted small"></i></span>
+                                <input type="text" class="form-control" name="phone"
+                                    value="{{ vendor.phone if vendor else '' }}" placeholder="+91 98XXX XXXXX" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Business Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i
+                                        class="fas fa-envelope text-muted small"></i></span>
+                                <input type="email" class="form-control" name="email"
+                                    value="{{ vendor.email if vendor else '' }}" placeholder="contact@vendor.com">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">GST Registration Number</label>
+                            <div class="input-group" style="max-width: 300px;">
+                                <span class="input-group-text bg-light border-end-0"><i
+                                        class="fas fa-id-card text-muted small"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0 text-uppercase fw-bold"
+                                    name="gstin" value="{{ vendor.gstin if vendor else '' }}"
+                                    placeholder="27XXXXXXXXXXXXX">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">Full Business Address</label>
+                            <textarea class="form-control" name="address" rows="3"
+                                placeholder="Door No, Street, Landmark, City, State - PIN">{{ vendor.address if vendor else '' }}</textarea>
+                        </div>
+
+                        <div class="col-12 mt-5">
+                            <button type="submit" class="btn btn-primary px-5 py-2 shadow-sm">
+                                <i class="fas fa-save me-2"></i>{{ 'Confirm Update' if vendor else 'Register Vendor'
+                                }}
+                            </button>
+                            <a href="{{ url_for('purchase.vendors') }}" class="btn btn-link text-muted px-4">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-600 {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #5a5c69;
+    }
+</style>
+{% endblock %}

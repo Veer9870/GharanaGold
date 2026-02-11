@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold">System Settings</h2>
+        <p class="text-muted mb-0">Configure company details and system preferences</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="list-group shadow-sm">
+            <a href="{{ url_for('settings.general') }}"
+                class="list-group-item list-group-item-action {% if request.endpoint == 'settings.general' %}active{% endif %} border-0 py-3">
+                <i class="fas fa-building me-2"></i> Company Profile
+            </a>
+            <a href="{{ url_for('auth.users') }}" class="list-group-item list-group-item-action border-0 py-3">
+                <i class="fas fa-users-cog me-2"></i> User Roles
+            </a>
+            <a href="{{ url_for('settings.notifications') }}"
+                class="list-group-item list-group-item-action {% if request.endpoint == 'settings.notifications' %}active{% endif %} border-0 py-3">
+                <i class="fas fa-bell me-2"></i> Notification Config
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-primary">Company Details for Invoicing</h5>
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Current Logo"
+                    class="rounded-circle shadow-sm border" style="width: 50px; height: 50px; object-fit: cover;">
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Company Name</label>
+                            <input type="text" class="form-control" name="company_name"
+                                value="{{ settings.get('company_name', 'Gharana Gold') }}">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Address / Registered Office</label>
+                            <textarea class="form-control" name="company_address"
+                                rows="3">{{ settings.get('company_address', '') }}</textarea>
+                            <div class="form-text">This will appear on invoices and reports.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">GSTIN</label>
+                            <input type="text" class="form-control" name="company_gstin"
+                                value="{{ settings.get('company_gstin', '') }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Phone Number</label>
+                            <input type="text" class="form-control" name="company_phone"
+                                value="{{ settings.get('company_phone', '') }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Support Email</label>
+                            <input type="email" class="form-control" name="company_email"
+                                value="{{ settings.get('company_email', '') }}">
+                        </div>
+
+                        <div class="col-12 mt-4 pt-3 border-top">
+                            <label class="form-label fw-bold">Invoice Terms & Conditions</label>
+                            <textarea class="form-control" name="terms_conditions"
+                                rows="4">{{ settings.get('terms_conditions', '1. Goods once sold will not be taken back.\n2. Interest @18% p.a. will be charged for delayed payment.') }}</textarea>
+                        </div>
+
+                        <div class="col-12 mt-4 text-end">
+                            <button type="submit" class="btn btn-primary px-5 py-2">
+                                <i class="fas fa-save me-2"></i>Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

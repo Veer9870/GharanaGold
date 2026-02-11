@@ -1,105 +1,286 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Reports & Analytics</h1>
-</div>
-
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-boxes fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Inventory Report</h5>
-                <p class="card-text">Current stock levels, valuation, and low stock items.</p>
-                <a href="{{ url_for('reports.export_csv', type='inventory') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-file-excel me-2"></i> Download Excel
-                </a>
-            </div>
-        </div>
+<!-- Intelligence Hub Status -->
+<div class="ai-status-bar mb-4 px-4 py-2 rounded-pill shadow-sm d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="intelligence-pulse me-3"></div>
+        <span class="small fw-bold text-uppercase tracking-wider">Analysis Engine: <span class="text-primary">Optimized
+                Data Pipelines</span></span>
     </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Sales Report</h5>
-                <p class="card-text">Sales history, revenue analysis, and customer trends.</p>
-                <a href="{{ url_for('reports.export_csv', type='sales') }}" class="btn btn-outline-success">
-                    <i class="fas fa-file-excel me-2"></i> Download Excel
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-truck fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Purchase Report</h5>
-                <p class="card-text">Purchase history, supplier performance, and expense tracking.</p>
-                <a href="{{ url_for('reports.export_csv', type='purchase') }}" class="btn btn-outline-warning">
-                    <i class="fas fa-file-excel me-2"></i> Download Excel
-                </a>
-            </div>
-        </div>
+    <div class="small d-none d-md-block text-muted">
+        <i class="fas fa-microchip me-1"></i> Processing real-time telemetry from across the Gharana Gold network
     </div>
 </div>
 
-<!-- Email Notifications Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-envelope me-2"></i> Email Notifications</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-3">
-                    <strong>📧 Configured Email:</strong> vp2524267@gmail.com<br>
-                    <strong>✅ Status:</strong> <span class="badge bg-success">Active</span>
-                </p>
-                <div class="row">
-                    <div class="col-md-4 mb-2">
-                        <div class="card border-primary">
-                            <div class="card-body text-center">
-                                <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
-                                <h6>Test Email</h6>
-                                <p class="small text-muted">Send low stock alert test</p>
-                                <a href="{{ url_for('reports.test_email') }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-vial"></i> Send Test
-                                </a>
-                            </div>
-                        </div>
+<div class="dashboard-header mb-4">
+    <div class="dashboard-title">
+        <h2 class="fw-bold d-flex align-items-center">
+            Intelligence Hub
+            <span class="badge bg-soft-primary text-primary fs-small ms-3 border border-primary px-3">Neural v2.0</span>
+        </h2>
+        <p class="text-muted mb-0">High-fidelity data exports and automated communication protocols</p>
+    </div>
+</div>
+
+<!-- Rapid Export Grid -->
+<div class="row g-4 mb-5">
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm overflow-hidden h-100 hover-up">
+            <div class="card-body p-0">
+                <div class="row g-0 h-100 flex-column">
+                    <div class="col bg-primary text-white d-flex align-items-center justify-content-center py-4">
+                        <i class="fas fa-boxes-packing fa-3x opacity-25"></i>
                     </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="card border-success">
-                            <div class="card-body text-center">
-                                <i class="fas fa-calendar-day fa-2x text-success mb-2"></i>
-                                <h6>Daily Summary</h6>
-                                <p class="small text-muted">Send today's report now</p>
-                                <a href="{{ url_for('reports.send_daily_summary') }}" class="btn btn-success btn-sm">
-                                    <i class="fas fa-chart-line"></i> Send Now
-                                </a>
-                            </div>
+                    <div class="col p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">Asset Catalog</h5>
+                            <span class="badge bg-soft-primary text-primary border border-primary px-2">Live</span>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="card border-info">
-                            <div class="card-body text-center">
-                                <i class="fas fa-info-circle fa-2x text-info mb-2"></i>
-                                <h6>Auto Notifications</h6>
-                                <p class="small text-muted">Purchase & Sales orders</p>
-                                <span class="badge bg-success">Enabled</span>
-                            </div>
-                        </div>
+                        <p class="text-muted small mb-4">Complete extraction of current inventory states and SKU
+                            valuations.</p>
+                        <a href="{{ url_for('reports.export_csv', type='inventory') }}"
+                            class="btn btn-primary d-flex align-items-center justify-content-between py-2 px-3 rounded-3 shadow-none mt-auto">
+                            <span><i class="fas fa-file-excel me-2"></i>Export Inventory</span>
+                            <i class="fas fa-chevron-right small"></i>
+                        </a>
                     </div>
                 </div>
-                <div class="alert alert-info mt-3 mb-0">
-                    <strong>💡 Tip:</strong> Emails are automatically sent when you create purchase/sales orders.
-                    Low stock alerts trigger when viewing the dashboard. Use the buttons above to test manually!
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm overflow-hidden h-100 hover-up border-top border-5 border-success">
+            <div class="card-body p-0">
+                <div class="row g-0 h-100 flex-column">
+                    <div class="col bg-success text-white d-flex align-items-center justify-content-center py-4">
+                        <i class="fas fa-chart-line fa-3x opacity-25"></i>
+                    </div>
+                    <div class="col p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">Revenue Stream</h5>
+                            <span class="badge bg-soft-success text-success border border-success px-2">Growth</span>
+                        </div>
+                        <p class="text-muted small mb-4">Full MTD sales ledger including tax breakdowns and customer
+                            metrics.</p>
+                        <a href="{{ url_for('reports.export_csv', type='sales') }}"
+                            class="btn btn-success d-flex align-items-center justify-content-between py-2 px-3 rounded-3 shadow-none mt-auto">
+                            <span><i class="fas fa-file-excel me-2"></i>Download Sales Data</span>
+                            <i class="fas fa-chevron-right small"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm overflow-hidden h-100 hover-up">
+            <div class="card-body p-0">
+                <div class="row g-0 h-100 flex-column">
+                    <div class="col bg-dark text-white d-flex align-items-center justify-content-center py-4">
+                        <i class="fas fa-truck-fast fa-3x opacity-25"></i>
+                    </div>
+                    <div class="col p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">Logistics History</h5>
+                            <span
+                                class="badge bg-soft-secondary text-secondary border border-secondary px-2">Ledger</span>
+                        </div>
+                        <p class="text-muted small mb-4">Historical record of all procurement cycles and vendor
+                            performance.</p>
+                        <a href="{{ url_for('reports.export_csv', type='purchase') }}"
+                            class="btn btn-dark d-flex align-items-center justify-content-between py-2 px-3 rounded-3 shadow-none mt-auto">
+                            <span><i class="fas fa-file-excel me-2"></i>Export Purchases</span>
+                            <i class="fas fa-chevron-right small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Communication & Telemetry Grid -->
+<div class="card border-0 shadow-sm overflow-hidden mb-4">
+    <div class="card-header bg-white py-3 border-0">
+        <h6 class="mb-0 fw-bold d-flex align-items-center">
+            <span class="live-dot me-3"></span>Communication Grid & Automated Protocols
+        </h6>
+    </div>
+    <div class="card-body bg-gradient-light p-4">
+        <div class="alert bg-white border-0 shadow-xs d-flex align-items-center mb-5 p-3 rounded-4">
+            <div class="bg-soft-primary text-primary rounded-circle p-3 me-3 d-flex align-items-center justify-content-center"
+                style="width: 50px; height: 50px;">
+                <i class="fas fa-envelope-open-text fa-lg"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="small text-muted fw-bold text-uppercase tracing-wider mb-1">Global Notification Network
+                </div>
+                <div class="fw-bold fs-5 text-dark">Broadcast Active: All Registered Accounts</div>
+            </div>
+            <div class="d-none d-md-block">
+                <span class="badge bg-success px-3 py-2 rounded-pill fw-normal">Verified Active</span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm glass-panel p-4 h-100 text-center transition-all">
+                    <div class="icon-circle bg-soft-primary text-primary mx-auto mb-3">
+                        <i class="fas fa-satellite"></i>
+                    </div>
+                    <h6 class="fw-bold">Ping System Health</h6>
+                    <p class="text-xs text-muted mb-4">Validate neural connectivity across the email dispatch network
+                        with a synthetic alert pulse.</p>
+                    <a href="{{ url_for('reports.test_email') }}"
+                        class="btn btn-sm btn-outline-primary w-100 py-2 rounded-pill">Execute Ping</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm glass-panel p-4 h-100 text-center transition-all">
+                    <div class="icon-circle bg-soft-success text-success mx-auto mb-3">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                    </div>
+                    <h6 class="fw-bold">Force EOD Sync</h6>
+                    <p class="text-xs text-muted mb-4">Manually trigger a high-fidelity snapshot of today's business
+                        telemetry to the admin sink.</p>
+                    <a href="{{ url_for('reports.send_daily_summary') }}"
+                        class="btn btn-sm btn-outline-success w-100 py-2 rounded-pill">Sync Now</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm bg-dark text-white p-4 h-100 text-center">
+                    <div class="icon-circle bg-primary text-white mx-auto mb-3">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h6 class="fw-bold">Auto-Dispatch v2</h6>
+                    <p class="text-xs mb-4 opacity-75">Vendor procurement emails are automatically generated and
+                        dispatched upon PO initialization.</p>
+                    <div class="d-flex align-items-center justify-content-center">
+                        <span class="small fw-bold text-primary me-2"><i
+                                class="fas fa-check-circle me-1"></i>PROACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ai-status-bar {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(78, 115, 223, 0.2);
+    }
+
+    .intelligence-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4e73df;
+        box-shadow: 0 0 0 rgba(78, 115, 223, 0.4);
+        animation: intelPulse 2s infinite;
+    }
+
+    @keyframes intelPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(78, 115, 223, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(78, 115, 223, 0);
+        }
+    }
+
+    .live-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #1cc88a;
+        border-radius: 50%;
+        display: inline-block;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.3;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    .bg-soft-success {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-soft-secondary {
+        background-color: rgba(133, 135, 150, 0.1);
+    }
+
+    .bg-gradient-light {
+        background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .glass-panel:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
+    }
+
+    .fs-small {
+        font-size: 0.7rem;
+    }
+
+    .tracing-wider {
+        letter-spacing: 0.1em;
+    }
+
+    .shadow-xs {
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.03);
+    }
+
+    .hover-up {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-up:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.08) !important;
+    }
+</style>
 {% endblock %}

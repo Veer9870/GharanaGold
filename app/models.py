@@ -10,6 +10,16 @@ class Setting(db.Model):
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.Text)
 
+    @staticmethod
+    def get(key, default=None):
+        setting = Setting.query.filter_by(key=key).first()
+        if setting:
+            # Handle boolean strings
+            if setting.value == 'True': return True
+            if setting.value == 'False': return False
+            return setting.value
+        return default
+
 # --- Authentication Models ---
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -48,15 +58,21 @@ class Product(db.Model):
     cost_price = db.Column(db.Numeric(10, 2))
     selling_price = db.Column(db.Numeric(10, 2))
     gst_percent = db.Column(db.Numeric(5, 2), default=0.0)
-    stock_quantity = db.Column(db.Integer, default=0)
+    stock_quantity = db.Column(db.Integer, default=0) # Saleable / Finished Goods
+    raw_stock = db.Column(db.Integer, default=0)      # Used for Production
     min_stock_alert = db.Column(db.Integer, default=10)
     batch_number = db.Column(db.String(50))
     expiry_date = db.Column(db.Date)
     warehouse_location = db.Column(db.String(100))
+    image_file = db.Column(db.String(100), default='default.jpg')
+    
+    # Primary Vendor association
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), nullable=True)
     
     # Relationships
     transactions = db.relationship('Transaction', backref='product', lazy=True)
     order_items = db.relationship('OrderItem', backref='product', lazy=True)
+    vendor = db.relationship('Vendor', backref='products', lazy=True)
 
 class Transaction(db.Model):
     """Tracks stock history"""
@@ -72,8 +88,8 @@ class Transaction(db.Model):
 
 
 # --- Purchase Models ---
-class Supplier(db.Model):
-    __tablename__ = 'suppliers'
+class Vendor(db.Model):
+    __tablename__ = 'vendors'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     contact_person = db.Column(db.String(100))
@@ -82,7 +98,7 @@ class Supplier(db.Model):
     address = db.Column(db.Text)
     gstin = db.Column(db.String(20))
     
-    orders = db.relationship('Order', backref='supplier', lazy=True, foreign_keys='Order.supplier_id')
+    orders = db.relationship('Order', backref='vendor', lazy=True, foreign_keys='Order.vendor_id')
 
 # --- Sales Models ---
 class Customer(db.Model):
@@ -100,20 +116,23 @@ class Customer(db.Model):
 class Order(db.Model):
     __tablename__ = 'orders'
     id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(10), nullable=False) # 'PURCHASE' or 'SALE'
+    type = db.Column(db.String(10), nullable=False) # 'PURCHASE', 'SALE'
     
-    # Nullable Foreign Keys because an order is either from supplier OR customer
-    supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=True)
+    # Foreign Keys
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), nullable=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
     
     date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='PENDING') # 'PENDING', 'COMPLETED', 'CANCELLED'
+    # Status: 'PENDING', 'RECEIVED', 'BILLED', 'PAID', 'CANCELLED'
+    status = db.Column(db.String(20), default='PENDING') 
     total_amount = db.Column(db.Numeric(12, 2), default=0.0)
     discount = db.Column(db.Numeric(12, 2), default=0.0)
     tax_amount = db.Column(db.Numeric(12, 2), default=0.0)
     grand_total = db.Column(db.Numeric(12, 2), default=0.0)
     
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+    grns = db.relationship('GRN', backref='order', lazy=True)
+    invoices = db.relationship('PurchaseInvoice', backref='order', lazy=True)
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
@@ -122,6 +141,55 @@ class OrderItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     
     quantity = db.Column(db.Integer, nullable=False)
+    received_quantity = db.Column(db.Integer, default=0)
     price = db.Column(db.Numeric(10, 2), nullable=False) # Cost Price for Purchase, Selling Price for Sales
     tax_amount = db.Column(db.Numeric(10, 2), default=0.0)
     total = db.Column(db.Numeric(10, 2), nullable=False)
+
+# --- Purchase Flow Specific Models ---
+
+class GRN(db.Model):
+    """Goods Receipt Note (Inward Entry)"""
+    __tablename__ = 'grns'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    grn_number = db.Column(db.String(20), unique=True)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    received_by = db.Column(db.String(100))
+    remarks = db.Column(db.Text)
+    
+    items = db.relationship('GRNItem', backref='grn', lazy=True, cascade="all, delete-orphan")
+
+class GRNItem(db.Model):
+    __tablename__ = 'grn_items'
+    id = db.Column(db.Integer, primary_key=True)
+    grn_id = db.Column(db.Integer, db.ForeignKey('grns.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity_received = db.Column(db.Integer, nullable=False)
+    batch_number = db.Column(db.String(50))
+    expiry_date = db.Column(db.Date)
+
+class PurchaseInvoice(db.Model):
+    """Vendor Bill / Purchase Invoice"""
+    __tablename__ = 'purchase_invoices'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), nullable=False)
+    invoice_number = db.Column(db.String(50), nullable=False)
+    invoice_date = db.Column(db.Date, nullable=False)
+    total_amount = db.Column(db.Numeric(12, 2), nullable=False)
+    status = db.Column(db.String(20), default='UNPAID') # 'UNPAID', 'PARTIAL', 'PAID'
+    
+    payments = db.relationship('VendorPayment', backref='invoice', lazy=True)
+    vendor = db.relationship('Vendor', backref='purchase_invoices', lazy=True)
+
+class VendorPayment(db.Model):
+    """Payment to Vendor"""
+    __tablename__ = 'vendor_payments'
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('purchase_invoices.id'), nullable=False)
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    payment_mode = db.Column(db.String(20), nullable=False) # 'Cash', 'Bank', 'UPI', 'NEFT'
+    transaction_id = db.Column(db.String(100))
+    remarks = db.Column(db.Text)
