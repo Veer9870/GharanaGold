@@ -1,8 +1,33 @@
+# Environment variables
 .env
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.pyz
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local SQLite database (use Supabase/PostgreSQL in production)
+erp.db
+*.db
+
+# IDE / Tools
 .gemini/
 brain/
-.venv/
-erp.db
+.vscode/
+.idea/
 
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
