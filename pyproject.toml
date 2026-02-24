@@ -17,7 +17,7 @@ dependencies = [
     "resend==0.7.2",
     "psycopg2-binary==2.9.9",
     "supabase==2.3.4",
-    "xhtml2pdf==0.2.14",
+    "reportlab==4.1.0",
 ]
 
 [build-system]
